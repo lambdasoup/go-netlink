@@ -23,8 +23,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/maxhille/go-ibutton/log"
-	"github.com/maxhille/go-ibutton/netlink"
+	"github.com/lambdasoup/go-netlink/log"
+	"github.com/lambdasoup/go-netlink/netlink"
 )
 
 const (

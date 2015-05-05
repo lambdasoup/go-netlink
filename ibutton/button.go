@@ -24,9 +24,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/maxhille/go-ibutton/crc16"
-	"github.com/maxhille/go-ibutton/log"
-	"github.com/maxhille/go-ibutton/w1"
+	"github.com/lambdasoup/go-netlink/crc16"
+	"github.com/lambdasoup/go-netlink/log"
+	"github.com/lambdasoup/go-netlink/w1"
 )
 
 // iButton command codes

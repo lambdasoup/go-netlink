@@ -24,8 +24,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/maxhille/go-ibutton/connector"
-	"github.com/maxhille/go-ibutton/log"
+	"github.com/lambdasoup/go-netlink/connector"
+	"github.com/lambdasoup/go-netlink/log"
 )
 
 type w1_cmd_type uint8

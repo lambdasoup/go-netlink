@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/maxhille/go-ibutton/log"
+	"github.com/lambdasoup/go-netlink/log"
 )
 
 // parse arguments

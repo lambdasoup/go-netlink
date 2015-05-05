@@ -25,7 +25,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/maxhille/go-ibutton/log"
+	"github.com/lambdasoup/go-netlink/log"
 )
 
 // Groups (source?)
