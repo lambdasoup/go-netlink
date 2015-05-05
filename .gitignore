@@ -1,0 +1,8 @@
+# executables
+ibutton
+
+# test executables
+*.test
+
+# vim
+*.swp
