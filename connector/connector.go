@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-netlink.  If not, see <http://www.gnu.org/licenses/>.
 
+// Package connector provides access to the Connector subsystem via Netlink
 package connector
 
 import (

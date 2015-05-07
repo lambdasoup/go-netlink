@@ -15,13 +15,38 @@
 // You should have received a copy of the GNU General Public License
 // along with go-netlink.  If not, see <http://www.gnu.org/licenses/>.
 
-package crc16
+package w1
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestChecksum(t *testing.T) {
-	var in, out = []byte("123456789"), uint16(0xbb3d)
-	if x := Checksum(in); x != out {
-		t.Errorf("Checksum(%v) = %v, want %v", in, x, out)
+/*
+func TestOpen(t *testing.T) {
+	b := new(Button)
+
+	err := b.Open()
+	if err != nil {
+		t.Fatalf("could not open ibutton: %v\n", err)
 	}
+	defer b.Close()
+
+	t.Logf("opened button: %v\n", b)
+}
+*/
+func TestStatus(t *testing.T) {
+	b := new(Button)
+
+	err := b.Open()
+	if err != nil {
+		t.Fatalf("could not open ibutton: %v\n", err)
+	}
+	defer b.Close()
+
+	s, err := b.Status()
+	if err != nil {
+		t.Fatalf("could not read status: %v\n", err)
+	}
+
+	t.Logf("button status: %v\n", s.Name())
 }

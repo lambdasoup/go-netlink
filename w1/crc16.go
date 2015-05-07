@@ -14,8 +14,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with go-netlink.  If not, see <http://www.gnu.org/licenses/>.
-//Package crc16 provides an implementation of CRC16.
-package crc16
+
+package w1
 
 // Populate the packages polynomial table. The table was grabbed somewhere on the net.
 func makeTable() [256]uint16 {

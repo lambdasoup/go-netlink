@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-netlink.  If not, see <http://www.gnu.org/licenses/>.
 
-// Package main includes the runnable commands for the ibutton project
+// Package main provides a client for Maxim iButton devices
 package main
 
 import (
@@ -24,6 +24,7 @@ import (
 	"os"
 
 	"github.com/lambdasoup/go-netlink/log"
+	"github.com/lambdasoup/go-netlink/w1"
 )
 
 // parse arguments
@@ -39,7 +40,7 @@ func main() {
 	switch *command {
 	case "status":
 
-		button := new(Button)
+		button := new(w1.Button)
 
 		if err := button.Open(); err != nil {
 			fmt.Printf("could not open iButton (%v)\n", err)
@@ -66,7 +67,7 @@ func main() {
 		}())
 		fmt.Printf("rate:           %v\n", status.SampleRate())
 	case "clear":
-		button := new(Button)
+		button := new(w1.Button)
 		err := button.Open()
 		defer button.Close()
 		if err != nil {
@@ -80,7 +81,7 @@ func main() {
 		}
 		fmt.Printf("Cleared Memory.\n")
 	case "start":
-		button := new(Button)
+		button := new(w1.Button)
 		err := button.Open()
 		defer button.Close()
 		if err != nil {
@@ -114,7 +115,7 @@ func main() {
 		}
 		fmt.Printf("Started mission.\n")
 	case "read":
-		button := new(Button)
+		button := new(w1.Button)
 		err := button.Open()
 		defer button.Close()
 		if err != nil {
@@ -130,7 +131,7 @@ func main() {
 			fmt.Printf("%v\t%3.3f°C\n", sample.Time, sample.Temp)
 		}
 	case "stop":
-		button := new(Button)
+		button := new(w1.Button)
 		err := button.Open()
 		defer button.Close()
 		if err != nil {

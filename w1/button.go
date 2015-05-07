@@ -15,8 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-netlink.  If not, see <http://www.gnu.org/licenses/>.
 
-// Package w1 provides access to 1-Wire devices
-package main
+package w1
 
 import (
 	"errors"
@@ -24,9 +23,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/lambdasoup/go-netlink/crc16"
 	"github.com/lambdasoup/go-netlink/log"
-	"github.com/lambdasoup/go-netlink/w1"
+	"github.com/maxhille/go-ibutton/crc16"
+	"github.com/maxhille/go-ibutton/w1"
 )
 
 // iButton command codes

@@ -15,7 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with go-netlink.  If not, see <http://www.gnu.org/licenses/>.
 
-// Package w1 provides access to One-Wire devices over Netlink / Connector
 package w1
 
 import (
