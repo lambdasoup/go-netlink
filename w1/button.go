@@ -24,8 +24,6 @@ import (
 	"time"
 
 	"github.com/lambdasoup/go-netlink/log"
-	"github.com/maxhille/go-ibutton/crc16"
-	"github.com/maxhille/go-ibutton/w1"
 )
 
 // iButton command codes
@@ -67,7 +65,7 @@ var devices = map[deviceId]struct {
 
 // Button represents an iButton
 type Button struct {
-	slave *w1.Slave
+	slave *Slave
 }
 
 // Sample represents a mission log sample
@@ -95,7 +93,7 @@ func (b *Button) Status() (status *Status, err error) {
 func (b *Button) Open() (err error) {
 
 	// open 1-wire connection
-	w1 := new(w1.W1)
+	w1 := new(W1)
 	err = w1.Open()
 	if err != nil {
 		return
@@ -128,7 +126,7 @@ func (b *Button) Open() (err error) {
 	return
 }
 
-func filterFamily(ss []w1.Slave) (filtered []w1.Slave) {
+func filterFamily(ss []Slave) (filtered []Slave) {
 	for _, s := range ss {
 		if s.IsFamily(0x41) {
 			filtered = append(filtered, s)
@@ -170,7 +168,7 @@ func (b *Button) StartMission() error {
 	return b.slave.Write(data)
 }
 
-// CopyScratchmap copies the scratchpad
+// CopyScratchpad copies the scratchpad
 func (b *Button) CopyScratchpad() error {
 	data := make([]byte, 12)
 	data[0] = COPY_SCRATCHPAD
@@ -321,7 +319,7 @@ func (b *Button) readMemory(address uint16, pages int) (result []byte, err error
 	copy(block, cmd[:3])
 	copy(block[3:], data[:34])
 	checksum := 0xffff ^ (uint16(block[33+3])<<8 + uint16(block[32+3]))
-	if crc16.Checksum(block[:32+3]) != checksum {
+	if Checksum(block[:32+3]) != checksum {
 		err = errors.New("crc check failed in initial crc")
 		return
 	}
@@ -336,7 +334,7 @@ func (b *Button) readMemory(address uint16, pages int) (result []byte, err error
 		copy(block, data[(page-1)*34:])
 		log.Printf("page %d %x\n", page, block)
 		checksum := 0xffff ^ (uint16(block[33])<<8 + uint16(block[32]))
-		if crc16.Checksum(block[:32]) != checksum {
+		if Checksum(block[:32]) != checksum {
 			err = errors.New("crc check failed failed in subsequent crc")
 			return
 		}
