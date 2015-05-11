@@ -93,10 +93,8 @@ func Open(groups uint32) (*NetlinkSocket, error) {
 	lsa.Groups = groups
 	lsa.Family = syscall.AF_NETLINK
 	lsa.Pid = 0
-	if err := syscall.Bind(socketFd, lsa); err != nil {
-		return nil, err
-	}
-	return &NetlinkSocket{socketFd, lsa, 0xaffe}, nil
+	err = syscall.Bind(socketFd, lsa)
+	return &NetlinkSocket{socketFd, lsa, 0xaffe}, err
 }
 
 // Closes the Connector
@@ -112,9 +110,8 @@ func (nls *NetlinkSocket) AddMembership(groupIdx int) error {
 func (nls *NetlinkSocket) Send(data []byte) error {
 	// TODO remove magic numbers
 	msg := &NetlinkMsg{uint32(NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, nls.seq, uint32(os.Getpid()), data}
-	nls.seq = nls.seq + 1
+	nls.seq++
 
-	//log.Printf("tx: % x", msg.Bytes())
 	log.Printf("\t\t\tNL SEND: %v", msg)
 
 	// TODO remove magic number
@@ -125,7 +122,6 @@ func (nls *NetlinkSocket) Send(data []byte) error {
 func (msg *NetlinkMsg) Bytes() []byte {
 	buf := new(bytes.Buffer)
 
-	// TODO LE vs BE?
 	binary.Write(buf, binary.LittleEndian, msg.Len)
 	binary.Write(buf, binary.LittleEndian, msg.Type)
 	binary.Write(buf, binary.LittleEndian, msg.Flags)
@@ -149,16 +145,9 @@ func (nls *NetlinkSocket) Receive() ([]byte, error) {
 		return nil, err
 	}
 
-	//log.Printf("rx: % x", rb[:128])
-
 	msg, err := parseNetlinkMsg(rb)
-	if err != nil {
-		return nil, err
-	}
-
 	log.Printf("\t\t\tNL RECV: %v", msg)
-
-	return msg.Data, nil
+	return msg.Data, err
 }
 
 func parseNetlinkMsg(bs []byte) (*NetlinkMsg, error) {
@@ -166,7 +155,6 @@ func parseNetlinkMsg(bs []byte) (*NetlinkMsg, error) {
 	buf := bytes.NewBuffer(bs)
 
 	err := error(nil)
-	// TODO LE vs BE?
 	err = binary.Read(buf, binary.LittleEndian, &msg.Len)
 	err = binary.Read(buf, binary.LittleEndian, &msg.Type)
 	err = binary.Read(buf, binary.LittleEndian, &msg.Flags)
@@ -191,9 +179,5 @@ func parseNetlinkMsg(bs []byte) (*NetlinkMsg, error) {
 		err = errors.New("NL parse left truncated data")
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return msg, nil
+	return msg, err
 }
