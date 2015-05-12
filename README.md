@@ -1,3 +1,5 @@
+![Travis CI](https://travis-ci.org/lambdasoup/go-netlink.svg?branch=master)
+
 go-netlink
 ==========
 
