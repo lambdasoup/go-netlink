@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-netlink.  If not, see <http://www.gnu.org/licenses/>.
 
-package w1
+package ibutton
 
 // Populate the packages polynomial table. The table was grabbed somewhere on the net.
 func makeTable() [256]uint16 {

@@ -11,7 +11,7 @@ The project's license is GPL3+
 
 Go package management can install ibutton directly from github:
 ```
-go install github.com/lambdasoup/go-netlink/ibutton
+go install github.com/lambdasoup/go-netlink/ibutton/ibutton
 ```
 
 # ibutton tool usage
