@@ -19,7 +19,6 @@ package connector
 
 import (
 	"bytes"
-	"os/exec"
 	"testing"
 )
 
@@ -29,63 +28,8 @@ const (
 	CN_TEST_VAL      = 0x456
 )
 
-var moduleLoaded = false
-
-func loadModule(t *testing.T) {
-	if moduleLoaded {
-		return
-	}
-
-	cmd := exec.Command("sudo", "insmod", "module/cn_test.ko")
-	err := cmd.Start()
-	if err != nil {
-		t.Logf("Could not load kernel module: %v", err)
-	}
-	t.Log("Loading kernel module")
-	err = cmd.Wait()
-	if err != nil {
-		t.Logf("Loading finished with error: %v", err)
-	}
-	moduleLoaded = true
-}
-
-func unloadModule(t *testing.T) {
-	cmd := exec.Command("sudo", "rmmod", "cn_test")
-	err := cmd.Start()
-	if err != nil {
-		t.Logf("Could not unload kernel module: %v", err)
-	}
-	t.Log("Unloading kernel module")
-	err = cmd.Wait()
-	if err != nil {
-		t.Logf("Unloading finished with error: %v", err)
-	}
-	moduleLoaded = false
-}
-
-func TestRequestResponse(t *testing.T) {
-	loadModule(t)
-	defer unloadModule(t)
-
-	c, err := Open(CbId{CN_TEST_IDX, CN_TEST_VAL})
-	if err != nil {
-		t.Fatalf("could not open the connector: %v", err)
-	}
-	defer c.Close()
-
-	data := new(bytes.Buffer)
-	data.WriteString("test data2")
-
-	response, err := c.Request(data.Bytes())
-	if err != nil {
-		t.Fatalf("could not complete request: %v", err)
-	}
-
-	t.Logf("response data: %v", response)
-}
-
 func TestParseConnectorMessage(t *testing.T) {
-	bs := make([]byte, 0)
+	var bs []byte
 
 	// CB_IDX, CB_VAL
 	bs = append(bs, 14, 0, 0, 0, 86, 4, 0, 0)
