@@ -271,7 +271,7 @@ func (b *Button) ReadLog() (samples []Sample, err error) {
 	byteCount := status.SampleCount() * sampleBytes
 	pages := int(byteCount / 32)
 	if byteCount%32 != 0 {
-		pages += 1
+		pages++
 	}
 
 	// read pages from device memory

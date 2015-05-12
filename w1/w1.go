@@ -28,11 +28,11 @@ import (
 	"github.com/lambdasoup/go-netlink/log"
 )
 
-type w1_cmd_type uint8
+type w1CmdType uint8
 
 // From drivers/w1/w1_netlink.h
 const (
-	W1_CMD_READ w1_cmd_type = iota
+	W1_CMD_READ w1CmdType = iota
 	W1_CMD_WRITE
 	W1_CMD_SEARCH
 	W1_CMD_ALARM_SEARCH
@@ -43,10 +43,11 @@ const (
 	W1_CMD_LIST_SLAVES
 )
 
-type w1_msg_type uint8
+type w1MsgType uint8
 
+// One-Wire command types
 const (
-	W1_SLAVE_ADD w1_msg_type = iota
+	W1_SLAVE_ADD w1MsgType = iota
 	W1_SLAVE_REMOVE
 	W1_MASTER_ADD
 	W1_MASTER_REMOVE
@@ -55,9 +56,10 @@ const (
 	W1_LIST_MASTERS
 )
 
+// W1Cmd is a One-Wire command
 // From drivers/w1/w1_netlink.h
 type W1Cmd struct {
-	cmd  w1_cmd_type
+	cmd  w1CmdType
 	res  uint8
 	data []byte
 }
@@ -66,9 +68,10 @@ func (cmd *W1Cmd) String() string {
 	return fmt.Sprintf("W1Cmd{%v, data %x}", cmd.cmd, cmd.data)
 }
 
+// W1Cmd is a One-Wire message
 // From drivers/w1/w1_netlink.h
 type W1Msg struct {
-	w1Type w1_msg_type
+	w1Type w1MsgType
 	status uint8
 	len    uint16
 	master *Master
@@ -85,7 +88,7 @@ type W1 struct {
 	c *connector.Connector
 }
 
-// Returns a list of the current list masters
+// ListMasters returns a list of the current list masters
 func (w1 *W1) ListMasters() (masters []Master, err error) {
 	log.Print("W1 LIST MASTERS")
 
@@ -130,7 +133,7 @@ func (w1 *W1) request(req *W1Msg, statusReplies int) (res *W1Msg, err error) {
 				err = fmt.Errorf("status error %d", msg.status)
 				return nil, err
 			}
-			statusReplies -= 1
+			statusReplies--
 		case connector.RESPONSE_TYPE_UNRELATED:
 			err = errors.New("received unexpected unrelated response")
 			return nil, err
@@ -172,12 +175,14 @@ func (w1 *W1) send(req *W1Msg) (err error) {
 	panic(fmt.Sprintf("unexpected connector msg type %d", rtype))
 }
 
+// Open opens a connection to the 1-Wire subsystem
 func (w1 *W1) Open() (err error) {
 	c, err := connector.Open(connector.CbId{connector.CN_W1_IDX, connector.CN_W1_VAL})
 	w1.c = c
 	return
 }
 
+// Close closes this 1-Wire connection
 func (w1 *W1) Close() {
 	w1.c.Close()
 }
@@ -257,7 +262,7 @@ func (m *Master) Close() {
 	m.w1.Close()
 }
 
-// Returns a list of this master's slaves
+// ListSlaves returns a list of this master's slaves
 func (m *Master) ListSlaves() (slaves []Slave, err error) {
 	log.Print("W1 LIST SLAVES")
 
