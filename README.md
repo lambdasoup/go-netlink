@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/lambdasoup/go-netlink.svg?branch=master)](https://travis-ci.org/lambdasoup/go-netlink)
+[![GoDoc](https://godoc.org/github.com/lambdasoup/go-netlink?status.svg)](https://godoc.org/github.com/lambdasoup/go-netlink)
 
 go-netlink
 ==========
