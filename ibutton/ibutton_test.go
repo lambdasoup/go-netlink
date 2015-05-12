@@ -16,37 +16,3 @@
 // along with go-netlink.  If not, see <http://www.gnu.org/licenses/>.
 
 package ibutton
-
-import (
-	"testing"
-)
-
-/*
-func TestOpen(t *testing.T) {
-	b := new(Button)
-
-	err := b.Open()
-	if err != nil {
-		t.Fatalf("could not open ibutton: %v\n", err)
-	}
-	defer b.Close()
-
-	t.Logf("opened button: %v\n", b)
-}
-*/
-func TestStatus(t *testing.T) {
-	b := new(Button)
-
-	err := b.Open()
-	if err != nil {
-		t.Fatalf("could not open ibutton: %v\n", err)
-	}
-	defer b.Close()
-
-	s, err := b.Status()
-	if err != nil {
-		t.Fatalf("could not read status: %v\n", err)
-	}
-
-	t.Logf("button status: %v\n", s.Name())
-}
