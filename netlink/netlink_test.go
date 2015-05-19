@@ -18,6 +18,7 @@
 package netlink
 
 import (
+	"syscall"
 	"testing"
 )
 
@@ -44,6 +45,23 @@ func TestParseNetlinkMessage(t *testing.T) {
 	assert(t, msg.Seq == uint32(12345))
 	assert(t, msg.Pid == uint32(0))
 
+}
+
+func TestBytes(t *testing.T) {
+	var data []byte
+
+	msg := &NetlinkMsg{uint32(NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, uint32(12345), uint32(0), data}
+	bs := msg.Bytes()
+
+	// length
+	assert(t, bs[0] == 16)
+
+	// type, flags
+	assert(t, bs[4] == 3)
+
+	// seq, pid
+	assert(t, bs[8] == 57)
+	assert(t, bs[9] == 48)
 }
 
 func assert(t *testing.T, assertion bool) {
