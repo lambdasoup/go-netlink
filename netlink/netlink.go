@@ -30,26 +30,26 @@ import (
 )
 
 // from linux/netlink.h
-var MSG_TYPES = map[MsgType]string{
+var msgTypes = map[msgType]string{
 	syscall.NLMSG_NOOP:    "NLMSG_NOOP",
 	syscall.NLMSG_ERROR:   "NLMSG_ERROR",
 	syscall.NLMSG_DONE:    "NLMSG_DONE",
 	syscall.NLMSG_OVERRUN: "NLMSG_OVERRUN",
 }
 
-type MsgType uint16
+type msgType uint16
 
-func (t MsgType) String() string {
-	return MSG_TYPES[t]
+func (t msgType) String() string {
+	return msgTypes[t]
 }
 
-type NetlinkMsg struct {
-	Len   uint32
-	Type  MsgType
-	Flags uint16
-	Seq   uint32
-	Pid   uint32
-	Data  []byte
+type netlinkMsg struct {
+	len     uint32
+	msgType msgType
+	flags   uint16
+	seq     uint32
+	pid     uint32
+	data    []byte
 }
 
 type NetlinkSocket struct {
@@ -80,7 +80,7 @@ func (nls *NetlinkSocket) Close() {
 
 func (nls *NetlinkSocket) Send(data []byte) error {
 	// TODO remove magic numbers
-	msg := &NetlinkMsg{uint32(syscall.NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, nls.seq, uint32(os.Getpid()), data}
+	msg := &netlinkMsg{uint32(syscall.NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, nls.seq, uint32(os.Getpid()), data}
 	nls.seq++
 
 	log.Printf("\t\t\tNL SEND: %v", msg)
@@ -90,22 +90,22 @@ func (nls *NetlinkSocket) Send(data []byte) error {
 	return err
 }
 
-func (msg *NetlinkMsg) Bytes() []byte {
+func (msg *netlinkMsg) Bytes() []byte {
 	buf := new(bytes.Buffer)
 
-	binary.Write(buf, binary.LittleEndian, msg.Len)
-	binary.Write(buf, binary.LittleEndian, msg.Type)
-	binary.Write(buf, binary.LittleEndian, msg.Flags)
-	binary.Write(buf, binary.LittleEndian, msg.Seq)
-	binary.Write(buf, binary.LittleEndian, msg.Pid)
+	binary.Write(buf, binary.LittleEndian, msg.len)
+	binary.Write(buf, binary.LittleEndian, msg.msgType)
+	binary.Write(buf, binary.LittleEndian, msg.flags)
+	binary.Write(buf, binary.LittleEndian, msg.seq)
+	binary.Write(buf, binary.LittleEndian, msg.pid)
 
-	buf.Write(msg.Data)
+	buf.Write(msg.data)
 
 	return buf.Bytes()
 }
 
-func (msg *NetlinkMsg) String() string {
-	return fmt.Sprintf("NetlinkMsg{len: %d, %v, %x, seq: %d, port: %d, body: %d}", msg.Len, msg.Type, msg.Flags, msg.Seq, msg.Pid, len(msg.Data))
+func (msg *netlinkMsg) String() string {
+	return fmt.Sprintf("NetlinkMsg{len: %d, %v, %x, seq: %d, port: %d, body: %d}", msg.len, msg.msgType, msg.flags, msg.seq, msg.pid, len(msg.data))
 }
 
 func (nls *NetlinkSocket) Receive() ([]byte, error) {
@@ -118,23 +118,23 @@ func (nls *NetlinkSocket) Receive() ([]byte, error) {
 
 	msg, err := parseNetlinkMsg(rb)
 	log.Printf("\t\t\tNL RECV: %v", msg)
-	return msg.Data, err
+	return msg.data, err
 }
 
-func parseNetlinkMsg(bs []byte) (*NetlinkMsg, error) {
-	msg := &NetlinkMsg{}
+func parseNetlinkMsg(bs []byte) (*netlinkMsg, error) {
+	msg := &netlinkMsg{}
 	buf := bytes.NewBuffer(bs)
 
 	err := error(nil)
-	err = binary.Read(buf, binary.LittleEndian, &msg.Len)
-	err = binary.Read(buf, binary.LittleEndian, &msg.Type)
-	err = binary.Read(buf, binary.LittleEndian, &msg.Flags)
-	err = binary.Read(buf, binary.LittleEndian, &msg.Seq)
-	err = binary.Read(buf, binary.LittleEndian, &msg.Pid)
+	err = binary.Read(buf, binary.LittleEndian, &msg.len)
+	err = binary.Read(buf, binary.LittleEndian, &msg.msgType)
+	err = binary.Read(buf, binary.LittleEndian, &msg.flags)
+	err = binary.Read(buf, binary.LittleEndian, &msg.seq)
+	err = binary.Read(buf, binary.LittleEndian, &msg.pid)
 
-	msg.Data = make([]byte, msg.Len-syscall.NLMSG_HDRLEN)
+	msg.data = make([]byte, msg.len-syscall.NLMSG_HDRLEN)
 
-	_, err = buf.Read(msg.Data)
+	_, err = buf.Read(msg.data)
 
 	// check for truncated data
 	for {

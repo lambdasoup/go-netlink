@@ -39,18 +39,18 @@ func TestParseNetlinkMessage(t *testing.T) {
 
 	msg, _ := parseNetlinkMsg(bs)
 
-	assert(t, msg.Len == uint32(47))
-	assert(t, MSG_TYPES[msg.Type] == "NLMSG_DONE")
-	assert(t, msg.Flags == uint16(0))
-	assert(t, msg.Seq == uint32(12345))
-	assert(t, msg.Pid == uint32(0))
+	assert(t, msg.len == uint32(47))
+	assert(t, msg.msgType == syscall.NLMSG_DONE)
+	assert(t, msg.flags == uint16(0))
+	assert(t, msg.seq == uint32(12345))
+	assert(t, msg.pid == uint32(0))
 
 }
 
 func TestBytes(t *testing.T) {
 	var data []byte
 
-	msg := &NetlinkMsg{uint32(NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, uint32(12345), uint32(0), data}
+	msg := &netlinkMsg{uint32(syscall.NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, uint32(12345), uint32(0), data}
 	bs := msg.Bytes()
 
 	// length
