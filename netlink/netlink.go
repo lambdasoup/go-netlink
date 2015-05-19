@@ -35,12 +35,6 @@ const (
 	GROUP_NETLINK = 23
 )
 
-// From uapi/linux/connector.h
-const (
-	CN_W1_IDX = 3
-	CN_W1_VAL = 1
-)
-
 // From linux/netlink.h
 const (
 	NETLINK_ADD_MEMBERSHIP = 1
