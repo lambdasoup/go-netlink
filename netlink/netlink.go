@@ -52,13 +52,14 @@ type netlinkMsg struct {
 	data    []byte
 }
 
+// NetlinkSocket is a Linux Netlink socket
 type NetlinkSocket struct {
 	socketFd int
 	lsa      *syscall.SockaddrNetlink
 	seq      uint32
 }
 
-// Opens Netlink socket
+// Open creates and binds a new Netlink socket
 func Open() (*NetlinkSocket, error) {
 	// TODO remove Connector hardcode
 	socketFd, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_DGRAM, syscall.NETLINK_CONNECTOR)
@@ -73,11 +74,12 @@ func Open() (*NetlinkSocket, error) {
 	return &NetlinkSocket{socketFd, lsa, 0xaffe}, err
 }
 
-// Closes the Connector
+// Close this Socket's connection
 func (nls *NetlinkSocket) Close() {
 	syscall.Close(nls.socketFd)
 }
 
+// Send the given data through this Netlink connection
 func (nls *NetlinkSocket) Send(data []byte) error {
 	// TODO remove magic numbers
 	msg := &netlinkMsg{uint32(syscall.NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, nls.seq, uint32(os.Getpid()), data}
@@ -108,6 +110,7 @@ func (msg *netlinkMsg) String() string {
 	return fmt.Sprintf("NetlinkMsg{len: %d, %v, %x, seq: %d, port: %d, body: %d}", msg.len, msg.msgType, msg.flags, msg.seq, msg.pid, len(msg.data))
 }
 
+// Receive data from this Netlink connection
 func (nls *NetlinkSocket) Receive() ([]byte, error) {
 	// TODO remove magic numbers
 	rb := make([]byte, 8192)
