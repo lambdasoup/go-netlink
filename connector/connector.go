@@ -60,7 +60,7 @@ type ConnectorMsg struct {
 }
 
 type Connector struct {
-	nls *netlink.NetlinkSocket
+	nls *netlink.Socket
 	id  CbId
 	seq uint32
 }

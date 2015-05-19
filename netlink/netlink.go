@@ -38,15 +38,15 @@ type netlinkMsg struct {
 	data    []byte
 }
 
-// NetlinkSocket is a Linux Netlink socket
-type NetlinkSocket struct {
+// Socket is a Linux Netlink socket
+type Socket struct {
 	socketFd int
 	lsa      *syscall.SockaddrNetlink
 	seq      uint32
 }
 
 // Open creates and binds a new Netlink socket
-func Open() (*NetlinkSocket, error) {
+func Open() (*Socket, error) {
 	// TODO remove Connector hardcode
 	socketFd, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_DGRAM, syscall.NETLINK_CONNECTOR)
 	if err != nil {
@@ -57,24 +57,24 @@ func Open() (*NetlinkSocket, error) {
 	lsa.Family = syscall.AF_NETLINK
 	lsa.Pid = 0
 	err = syscall.Bind(socketFd, lsa)
-	return &NetlinkSocket{socketFd, lsa, 0xaffe}, err
+	return &Socket{socketFd, lsa, 0xaffe}, err
 }
 
 // Close this Socket's connection
-func (nls *NetlinkSocket) Close() {
-	syscall.Close(nls.socketFd)
+func (s *Socket) Close() {
+	syscall.Close(s.socketFd)
 }
 
 // Send the given data through this Netlink connection
-func (nls *NetlinkSocket) Send(data []byte) error {
+func (s *Socket) Send(data []byte) error {
 	// TODO remove magic numbers
-	msg := &netlinkMsg{uint32(syscall.NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, nls.seq, uint32(os.Getpid()), data}
-	nls.seq++
+	msg := &netlinkMsg{uint32(syscall.NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, s.seq, uint32(os.Getpid()), data}
+	s.seq++
 
 	log.Printf("\t\t\tNL SEND: %v", msg)
 
 	// TODO remove magic number
-	err := syscall.Sendto(nls.socketFd, msg.Bytes(), 0, nls.lsa)
+	err := syscall.Sendto(s.socketFd, msg.Bytes(), 0, s.lsa)
 	return err
 }
 
@@ -107,10 +107,10 @@ func (msg *netlinkMsg) String() string {
 }
 
 // Receive data from this Netlink connection
-func (nls *NetlinkSocket) Receive() ([]byte, error) {
+func (s *Socket) Receive() ([]byte, error) {
 	// TODO remove magic numbers
 	rb := make([]byte, 8192)
-	_, _, err := syscall.Recvfrom(nls.socketFd, rb, 0)
+	_, _, err := syscall.Recvfrom(s.socketFd, rb, 0)
 	if err != nil {
 		return nil, err
 	}
