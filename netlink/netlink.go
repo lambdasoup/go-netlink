@@ -29,23 +29,9 @@ import (
 	"github.com/lambdasoup/go-netlink/log"
 )
 
-// from linux/netlink.h
-var msgTypes = map[msgType]string{
-	syscall.NLMSG_NOOP:    "NLMSG_NOOP",
-	syscall.NLMSG_ERROR:   "NLMSG_ERROR",
-	syscall.NLMSG_DONE:    "NLMSG_DONE",
-	syscall.NLMSG_OVERRUN: "NLMSG_OVERRUN",
-}
-
-type msgType uint16
-
-func (t msgType) String() string {
-	return msgTypes[t]
-}
-
 type netlinkMsg struct {
 	len     uint32
-	msgType msgType
+	msgType uint16
 	flags   uint16
 	seq     uint32
 	pid     uint32
@@ -107,7 +93,17 @@ func (msg *netlinkMsg) Bytes() []byte {
 }
 
 func (msg *netlinkMsg) String() string {
-	return fmt.Sprintf("NetlinkMsg{len: %d, %v, %x, seq: %d, port: %d, body: %d}", msg.len, msg.msgType, msg.flags, msg.seq, msg.pid, len(msg.data))
+
+	// from linux/netlink.h
+	msgTypes := map[uint16]string{
+		syscall.NLMSG_NOOP:    "NLMSG_NOOP",
+		syscall.NLMSG_ERROR:   "NLMSG_ERROR",
+		syscall.NLMSG_DONE:    "NLMSG_DONE",
+		syscall.NLMSG_OVERRUN: "NLMSG_OVERRUN",
+	}
+
+	return fmt.Sprintf("NetlinkMsg{len: %d, %v, %x, seq: %d, port: %d, body: %d}",
+		msg.len, msgTypes[msg.msgType], msg.flags, msg.seq, msg.pid, len(msg.data))
 }
 
 // Receive data from this Netlink connection
