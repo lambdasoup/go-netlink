@@ -29,22 +29,6 @@ import (
 	"github.com/lambdasoup/go-netlink/log"
 )
 
-// Groups (source?)
-const (
-	GROUP_NONE    = 0
-	GROUP_NETLINK = 23
-)
-
-// From linux/netlink.h
-const (
-	NETLINK_ADD_MEMBERSHIP = 1
-)
-
-// From linux/socket.h
-const (
-	SOL_NETLINK = 270
-)
-
 const NLMSG_HDRLEN = 16
 
 // from linux/netlink.h
@@ -77,14 +61,14 @@ type NetlinkSocket struct {
 }
 
 // Opens Netlink socket
-func Open(groups uint32) (*NetlinkSocket, error) {
+func Open() (*NetlinkSocket, error) {
 	// TODO remove Connector hardcode
 	socketFd, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_DGRAM, syscall.NETLINK_CONNECTOR)
 	if err != nil {
 		return nil, err
 	}
 	lsa := &syscall.SockaddrNetlink{}
-	lsa.Groups = groups
+	lsa.Groups = 0
 	lsa.Family = syscall.AF_NETLINK
 	lsa.Pid = 0
 	err = syscall.Bind(socketFd, lsa)
@@ -94,11 +78,6 @@ func Open(groups uint32) (*NetlinkSocket, error) {
 // Closes the Connector
 func (nls *NetlinkSocket) Close() {
 	syscall.Close(nls.socketFd)
-}
-
-// Adds a Connector/Netlink multicast group membership
-func (nls *NetlinkSocket) AddMembership(groupIdx int) error {
-	return syscall.SetsockoptInt(nls.socketFd, SOL_NETLINK, NETLINK_ADD_MEMBERSHIP, groupIdx)
 }
 
 func (nls *NetlinkSocket) Send(data []byte) error {

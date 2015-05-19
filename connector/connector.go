@@ -67,7 +67,7 @@ type Connector struct {
 
 // Opens Connector
 func Open(id CbId) (*Connector, error) {
-	nls, err := netlink.Open(netlink.GROUP_NONE)
+	nls, err := netlink.Open()
 	if err != nil {
 		return nil, err
 	}
