@@ -29,14 +29,12 @@ import (
 	"github.com/lambdasoup/go-netlink/log"
 )
 
-const NLMSG_HDRLEN = 16
-
 // from linux/netlink.h
 var MSG_TYPES = map[MsgType]string{
-	0x1: "NLMSG_NOOP",
-	0x2: "NLMSG_ERROR",
-	0x3: "NLMSG_DONE",
-	0x4: "NLMSG_OVERRUN",
+	syscall.NLMSG_NOOP:    "NLMSG_NOOP",
+	syscall.NLMSG_ERROR:   "NLMSG_ERROR",
+	syscall.NLMSG_DONE:    "NLMSG_DONE",
+	syscall.NLMSG_OVERRUN: "NLMSG_OVERRUN",
 }
 
 type MsgType uint16
@@ -82,7 +80,7 @@ func (nls *NetlinkSocket) Close() {
 
 func (nls *NetlinkSocket) Send(data []byte) error {
 	// TODO remove magic numbers
-	msg := &NetlinkMsg{uint32(NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, nls.seq, uint32(os.Getpid()), data}
+	msg := &NetlinkMsg{uint32(syscall.NLMSG_HDRLEN + len(data)), syscall.NLMSG_DONE, 0, nls.seq, uint32(os.Getpid()), data}
 	nls.seq++
 
 	log.Printf("\t\t\tNL SEND: %v", msg)
@@ -134,7 +132,7 @@ func parseNetlinkMsg(bs []byte) (*NetlinkMsg, error) {
 	err = binary.Read(buf, binary.LittleEndian, &msg.Seq)
 	err = binary.Read(buf, binary.LittleEndian, &msg.Pid)
 
-	msg.Data = make([]byte, msg.Len-NLMSG_HDRLEN)
+	msg.Data = make([]byte, msg.Len-syscall.NLMSG_HDRLEN)
 
 	_, err = buf.Read(msg.Data)
 
