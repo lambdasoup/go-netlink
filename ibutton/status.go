@@ -46,9 +46,9 @@ func (s *Status) decodeTemp(bytes []byte) (temp Temperature) {
 
 	switch len(bytes) {
 	case 1:
-		temp = Temperature(float32(bytes[0])/2 + devices[s.DeviceId()].offset)
+		temp = Temperature(float32(bytes[0])/2 + devices[s.DeviceID()].offset)
 	case 2:
-		temp = Temperature(float32(bytes[0])/2 + devices[s.DeviceId()].offset + float32(bytes[1])/512)
+		temp = Temperature(float32(bytes[0])/2 + devices[s.DeviceID()].offset + float32(bytes[1])/512)
 	}
 
 	return
@@ -107,17 +107,17 @@ func (s *Status) MemoryCleared() bool {
 	return s.bytes[0x15]&(0x01<<3) > 0
 }
 
-// DeviceId the device identifier byte
-func (s *Status) DeviceId() (model deviceId) {
+// DeviceID returns the device identifier
+func (s *Status) DeviceID() (model deviceID) {
 
-	return deviceId(s.bytes[0x26])
+	return deviceID(s.bytes[0x26])
 }
 
 // correctionFactors returns the temperature correction factors for this device
 func (s *Status) correctionFactors() (a Temperature, b Temperature, c Temperature) {
 
 	// get chip-hardcoded correction values
-	tr1 := devices[s.DeviceId()].tr1
+	tr1 := devices[s.DeviceID()].tr1
 	tr2 := s.decodeTemp(s.bytes[0x40:0x42])
 	tc2 := s.decodeTemp(s.bytes[0x42:0x44])
 	tr3 := s.decodeTemp(s.bytes[0x44:0x46])
@@ -139,10 +139,10 @@ func (s *Status) correctionFactors() (a Temperature, b Temperature, c Temperatur
 // Name the device model's name
 func (s *Status) Name() string {
 
-	device, ok := devices[s.DeviceId()]
+	device, ok := devices[s.DeviceID()]
 	if ok {
 		return device.name
 	}
 
-	return fmt.Sprintf("Unknown Device (deviceId:%x)", s.DeviceId())
+	return fmt.Sprintf("Unknown Device (deviceID:%x)", s.DeviceID())
 }

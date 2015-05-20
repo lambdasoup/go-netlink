@@ -30,29 +30,29 @@ import (
 
 // iButton command codes
 const (
-	WRITE_SCRATCHPAD uint8 = 0x0F
-	COPY_SCRATCHPAD  uint8 = 0x99
-	READ_SCRATCHPAD  uint8 = 0xAA
-	READ_MEMORY      uint8 = 0x69
-	CLEAR_MEMORY     uint8 = 0x96
-	STOP_MISSION     uint8 = 0x33
-	START_MISSION    uint8 = 0xCC
+	writeScratchpad uint8 = 0x0F
+	copyScratchpad        = 0x99
+	readScratchpad        = 0xAA
+	readMemory            = 0x69
+	clearMemory           = 0x96
+	stopMission           = 0x33
+	startMission          = 0xCC
 )
 
 // device identifiers type
-type deviceId int
+type deviceID int
 
 // device identifier byte descriptors
 const (
-	DS2422  deviceId = 0x00
-	DS1923  deviceId = 0x20
-	DS1922L deviceId = 0x40
-	DS1922T deviceId = 0x60
-	DS1922E deviceId = 0x80
+	DS2422  deviceID = 0x00
+	DS1923           = 0x20
+	DS1922L          = 0x40
+	DS1922T          = 0x60
+	DS1922E          = 0x80
 )
 
 // device specific data
-var devices = map[deviceId]struct {
+var devices = map[deviceID]struct {
 	name      string
 	offset    float32
 	supported bool
@@ -149,7 +149,7 @@ func (b *Button) Close() {
 // StopMission stops the currently running mission
 func (b *Button) StopMission() error {
 	data := make([]byte, 10)
-	data[0] = STOP_MISSION
+	data[0] = stopMission
 	data[9] = 0xFF
 	return b.slave.Write(data)
 }
@@ -157,7 +157,7 @@ func (b *Button) StopMission() error {
 // ClearMemory clears the ibutton memory
 func (b *Button) ClearMemory() error {
 	data := make([]byte, 10)
-	data[0] = CLEAR_MEMORY
+	data[0] = clearMemory
 	data[9] = 0xFF
 	return b.slave.Write(data)
 }
@@ -165,7 +165,7 @@ func (b *Button) ClearMemory() error {
 // StartMission starts a mission
 func (b *Button) StartMission() error {
 	data := make([]byte, 10)
-	data[0] = START_MISSION
+	data[0] = startMission
 	data[9] = 0xFF
 	return b.slave.Write(data)
 }
@@ -173,7 +173,7 @@ func (b *Button) StartMission() error {
 // CopyScratchpad copies the scratchpad
 func (b *Button) CopyScratchpad() error {
 	data := make([]byte, 12)
-	data[0] = COPY_SCRATCHPAD
+	data[0] = copyScratchpad
 	data[1] = 0x00
 	data[2] = 0x02
 	data[3] = 0x1F
@@ -184,8 +184,8 @@ func (b *Button) CopyScratchpad() error {
 func (b *Button) WriteScratchpad() error {
 	data := make([]byte, 35)
 
-	// command00 02
-	data[0] = WRITE_SCRATCHPAD
+	// command
+	data[0] = writeScratchpad
 
 	// target address (scratchpad)
 	data[1] = 0x00
@@ -245,7 +245,7 @@ func (b *Button) WriteScratchpad() error {
 func (b *Button) ReadScratchpad() (data []byte, err error) {
 	// send the read scratchpad command
 	cmd := make([]byte, 1)
-	cmd[0] = READ_SCRATCHPAD
+	cmd[0] = readScratchpad
 	return b.slave.Read(cmd, 35)
 }
 
@@ -305,7 +305,7 @@ func (b *Button) readMemory(address uint16, pages int) (result []byte, err error
 
 	// send the read command
 	cmd := make([]byte, 11)
-	cmd[0] = READ_MEMORY
+	cmd[0] = readMemory
 	cmd[1] = byte(address)
 	cmd[2] = byte(address >> 8)
 
