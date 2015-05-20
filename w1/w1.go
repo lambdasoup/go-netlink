@@ -68,7 +68,7 @@ func (cmd *W1Cmd) String() string {
 	return fmt.Sprintf("W1Cmd{%v, data %x}", cmd.cmd, cmd.data)
 }
 
-// W1Cmd is a One-Wire message
+// W1Msg is a 1-Wire message
 // From drivers/w1/w1_netlink.h
 type W1Msg struct {
 	w1Type w1MsgType
@@ -84,6 +84,7 @@ func (msg *W1Msg) String() string {
 	return fmt.Sprintf("W1Msg{%v, status %v, len %v, master %v, slave %v, data %x}", msg.w1Type, msg.status, len(msg.data), msg.master, msg.slave, msg.data)
 }
 
+// W1 is a 1-Wire connection
 type W1 struct {
 	c *connector.Connector
 }
@@ -253,11 +254,13 @@ func (msg *W1Msg) toBytes() []byte {
 	return buf.Bytes()
 }
 
+// Master is a 1-Wire Master device
 type Master struct {
 	id uint32
 	w1 *W1
 }
 
+// Close this Slave's connection
 func (m *Master) Close() {
 	m.w1.Close()
 }
@@ -323,6 +326,7 @@ func (m *Master) writeSlave(slave *Slave, args []byte) (err error) {
 	return
 }
 
+// Slave is a 1-Wire slave device
 type Slave struct {
 	family byte
 	uid    [6]byte
@@ -330,10 +334,12 @@ type Slave struct {
 	master *Master
 }
 
+// Close this Slave's 1-Wire connection
 func (s *Slave) Close() {
 	s.master.Close()
 }
 
+// IsFamily returns true if this Slave is of the given device family
 func (s *Slave) IsFamily(family byte) bool {
 	return s.family == family
 }
