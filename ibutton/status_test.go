@@ -16,20 +16,3 @@
 // along with go-netlink.  If not, see <http://www.gnu.org/licenses/>.
 
 package ibutton
-
-import (
-	"testing"
-)
-
-func TestParseTime(t *testing.T) {
-	bs := make([]byte, 6)
-
-	// day 3
-	bs[3] = 3
-
-	time := parseTime(bs)
-
-	if time.Day() != 3 {
-		t.Fail()
-	}
-}

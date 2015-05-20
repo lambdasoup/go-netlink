@@ -191,18 +191,9 @@ func (b *Button) WriteScratchpad() error {
 	data[1] = 0x00
 	data[2] = 0x02
 
-	// time and date (01.04.2013 15:30:00)
-	// strange format, so: 30 -> "30" -> 0x30
+	// write current time
 	now := time.Now()
-	second, _ := strconv.ParseInt(strconv.Itoa(now.Second()), 16, 8)
-	minute, _ := strconv.ParseInt(strconv.Itoa(now.Minute()), 16, 8)
-	hour, _ := strconv.ParseInt(strconv.Itoa(now.Hour()), 16, 8)
-	data[3] = byte(second)
-	data[4] = byte(minute)
-	data[5] = byte(hour)
-	data[6] = byte(now.Day())
-	data[7] = byte(now.Month())
-	data[8] = byte(now.Year() % 100)
+	serializeTime(data[2:], &now)
 
 	// sample rate (10mins with EHSS=0)
 	data[9] = 0x0A
@@ -345,4 +336,34 @@ func (b *Button) readMemory(address uint16, pages int) (result []byte, err error
 	}
 
 	return
+}
+
+// parseTime parses a time object from the given bytes
+func parseTime(bytes []byte) time.Time {
+
+	year := int(2000) + int(bytes[5]&0x0f) + int(bytes[5]>>4)*10
+	month := int(bytes[4]&0x0f) + int(bytes[4]>>4)*10
+	day := int(bytes[3]&0x0f) + int(bytes[3]>>4)*10
+	hour := int(bytes[2]&0x0f) + int(bytes[2]>>4)&3*10
+	minute := int(bytes[1]&0x0f) + int(bytes[1]>>4)*10
+	second := int(bytes[0]&0x0f) + int(bytes[0]>>4)*10
+
+	return time.Date(year, time.Month(month), day, hour, minute, second, 0, time.Local)
+}
+
+// serialize given time to given bytes
+// check ibutton spec for format description
+func serializeTime(bs []byte, t *time.Time) {
+	second, _ := strconv.ParseInt(strconv.Itoa(t.Second()), 16, 8)
+	minute, _ := strconv.ParseInt(strconv.Itoa(t.Minute()), 16, 8)
+	hour, _ := strconv.ParseInt(strconv.Itoa(t.Hour()), 16, 8)
+	day, _ := strconv.ParseInt(strconv.Itoa(t.Day()), 16, 8)
+	month, _ := strconv.ParseInt(strconv.Itoa(int(t.Month())), 16, 8)
+
+	bs[0] = byte(second)
+	bs[1] = byte(minute)
+	bs[2] = byte(hour)
+	bs[3] = byte(day)
+	bs[4] = byte(month)
+	bs[5] = byte(t.Year() % 100)
 }

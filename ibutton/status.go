@@ -54,19 +54,6 @@ func (s *Status) decodeTemp(bytes []byte) (temp Temperature) {
 	return
 }
 
-// parseTime parses a time object from the given bytes
-func parseTime(bytes []byte) time.Time {
-
-	year := int(2000) + int(bytes[5]&0x0f) + int(bytes[5]>>4)*10
-	month := int(bytes[4]&0x0f) + int(bytes[4]>>4)*10
-	day := int(bytes[3]&0x0f) + int(bytes[3]>>4)*10
-	hour := int(bytes[2]&0x0f) + int(bytes[2]>>4)&3*10
-	minute := int(bytes[1]&0x0f) + int(bytes[1]>>4)*10
-	second := int(bytes[0]&0x0f) + int(bytes[0]>>4)*10
-
-	return time.Date(year, time.Month(month), day, hour, minute, second, 0, time.Local)
-}
-
 // SampleCount count of recorded samples since last mission start
 func (s *Status) SampleCount() uint32 {
 
