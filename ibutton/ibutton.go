@@ -300,7 +300,7 @@ func (b *Button) readMemory(address uint16, pages int) (result []byte, err error
 	cmd[1] = byte(address)
 	cmd[2] = byte(address >> 8)
 
-	data, err := b.slave.Read(cmd, pages*34)
+	data, err := b.slave.Read(cmd, pages)
 	if err != nil {
 		return
 	}

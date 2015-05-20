@@ -39,10 +39,12 @@ func (w1 *W1) ListMasters() (masters []Master, err error) {
 
 	// send search request
 	cmd := &msg{listMasters, 0, 0, nil, nil, 0, nil}
-	msg, err := w1.request(cmd, -1)
+	msgs, err := w1.request(cmd, -1)
 	if err != nil {
 		return
 	}
+	// expecting only one response message
+	msg := msgs[0]
 	buf := bytes.NewBuffer(msg.data)
 	for i := 0; i < int(msg.len); i = i + 4 {
 		var id uint32
@@ -52,7 +54,7 @@ func (w1 *W1) ListMasters() (masters []Master, err error) {
 	return
 }
 
-func (w1 *W1) request(req *msg, statusReplies int) (res *msg, err error) {
+func (w1 *W1) request(req *msg, statusReplies int) (res []msg, err error) {
 	log.Printf("\tW1 REQUEST: %v", req)
 
 	msgID, err := w1.c.Send(req.toBytes())
@@ -67,15 +69,15 @@ func (w1 *W1) request(req *msg, statusReplies int) (res *msg, err error) {
 		if err != nil {
 			return nil, err
 		}
-		msg := parseW1Msg(data)
+		m := parseW1Msg(data)
 		switch rtype {
 		case connector.ResponseTypeReply:
-			log.Printf("\tW1 RECV REPLY: %v", msg)
-			res = msg
+			log.Printf("\tW1 RECV REPLY: %v", m)
+			res = append(res, m)
 		case connector.ResponseTypeEcho:
-			log.Printf("\tW1 RECV STATUS: %v", msg)
-			if msg.status != 0 {
-				err = fmt.Errorf("status error %d", msg.status)
+			log.Printf("\tW1 RECV STATUS: %v", m)
+			if m.status != 0 {
+				err = fmt.Errorf("status error %d", m.status)
 				return nil, err
 			}
 			statusReplies--

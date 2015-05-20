@@ -53,8 +53,8 @@ func (m *msg) String() string {
 		m.w1Type, m.status, len(m.data), m.master, m.slave, m.data)
 }
 
-func parseW1Msg(bs []byte) *msg {
-	msg := &msg{}
+func parseW1Msg(bs []byte) msg {
+	msg := msg{}
 	buf := bytes.NewBuffer(bs)
 
 	binary.Read(buf, binary.LittleEndian, &msg.w1Type)

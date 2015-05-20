@@ -41,8 +41,8 @@ func (s *Slave) String() string {
 	return fmt.Sprintf("Slave{Family:%x, UID:%x}", s.family, s.uid)
 }
 
-func (s *Slave) Read(data []byte, count int) ([]byte, error) {
-	return s.master.readSlave(s, data, count)
+func (s *Slave) Read(data []byte, pages int) ([]byte, error) {
+	return s.master.readSlave(s, data, pages)
 }
 
 func (s *Slave) Write(data []byte) error {

@@ -43,10 +43,12 @@ func (ms *Master) ListSlaves() (slaves []Slave, err error) {
 	c := cmd{cmdListSlaves, 0, nil}
 	req := &msg{masterCmd, 0, uint16(len(c.toBytes())), ms, nil, 0, c.toBytes()}
 
-	msg, err := ms.w1.request(req, 1)
+	msgs, err := ms.w1.request(req, 1)
 	if err != nil {
 		return
 	}
+	// expecting only one response message
+	msg := msgs[0]
 	buf := bytes.NewBuffer(msg.data)
 
 	// skip W1_CMD part
@@ -63,25 +65,35 @@ func (ms *Master) ListSlaves() (slaves []Slave, err error) {
 	return
 }
 
-func (ms *Master) readSlave(slave *Slave, args []byte, count int) (data []byte, err error) {
+func (ms *Master) readSlave(slave *Slave, args []byte, pages int) (data []byte, err error) {
 	log.Print("W1 READ SLAVE")
 
-	cmdW := cmd{cmdWrite, 0, args}
-	cmdR := cmd{cmdRead, 0, make([]byte, count)}
+	body := bytes.NewBuffer(make([]byte, 0))
 
-	buf := bytes.NewBuffer(make([]byte, 0))
-	buf.Write(cmdW.toBytes())
-	buf.Write(cmdR.toBytes())
-	cmd := buf.Bytes()
+	// one write command
+	c := cmd{cmdWrite, 0, args}
+	body.Write(c.toBytes())
 
-	req := &msg{slaveCmd, 0, uint16(len(cmd)), nil, slave, 0, cmd}
+	// one read command per page
+	// page is 32 data + 2 crc = 34 bytes
+	for i := 0; i < pages; i++ {
+		c := cmd{cmdRead, 0, make([]byte, 34)}
+		body.Write(c.toBytes())
+	}
 
-	msg, err := ms.w1.request(req, 2)
+	req := &msg{slaveCmd, 0, uint16(body.Len()), nil, slave, 0, body.Bytes()}
+
+	msgs, err := ms.w1.request(req, pages+1)
 	if err != nil {
 		return
 	}
-	// throw away w1 cmd header
-	data = msg.data[4:]
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	for _, m := range msgs {
+		// throw away w1 cmd header
+		buf.Write(m.data[4:])
+	}
+	data = buf.Bytes()
 
 	return
 }
