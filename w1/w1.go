@@ -118,11 +118,11 @@ func (w1 *W1) request(req *W1Msg, statusReplies int) (res *W1Msg, err error) {
 	// we need to await all status replies and the actual response
 	// these are all out-of-order
 	for statusReplies > 0 || res == nil {
-		cnMsg, rtype, err := w1.c.Receive(msgId)
+		data, rtype, err := w1.c.Receive(msgId)
 		if err != nil {
 			return nil, err
 		}
-		msg := parseW1Msg(cnMsg.Data())
+		msg := parseW1Msg(data)
 		switch rtype {
 		case connector.RESPONSE_TYPE_REPLY:
 			log.Printf("\tW1 RECV REPLY: %v", msg)
@@ -152,12 +152,12 @@ func (w1 *W1) send(req *W1Msg) (err error) {
 		return
 	}
 
-	cnMsg, rtype, err := w1.c.Receive(msgId)
+	data, rtype, err := w1.c.Receive(msgId)
 	if err != nil {
 		return
 	}
 
-	msg := parseW1Msg(cnMsg.Data())
+	msg := parseW1Msg(data)
 	switch rtype {
 	case connector.RESPONSE_TYPE_REPLY:
 		return errors.New("received unexpected request response")

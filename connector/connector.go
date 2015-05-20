@@ -50,7 +50,7 @@ type CbId struct {
 	Val uint32
 }
 
-type ConnectorMsg struct {
+type msg struct {
 	id    CbId
 	seq   uint32
 	ack   uint32
@@ -59,13 +59,14 @@ type ConnectorMsg struct {
 	data  []byte
 }
 
+// Connector is a Linux Connector
 type Connector struct {
 	nls *netlink.Socket
 	id  CbId
 	seq uint32
 }
 
-// Opens Connector
+// Open a new Connector
 func Open(id CbId) (*Connector, error) {
 	nls, err := netlink.Open()
 	if err != nil {
@@ -75,56 +76,55 @@ func Open(id CbId) (*Connector, error) {
 	return &Connector{nls, id, 0xdead}, nil
 }
 
-func (c *ConnectorMsg) Data() []byte {
-	return c.data
-}
-
-// Closes the Connector
+// Close the Connector
 func (c *Connector) Close() {
 	c.nls.Close()
 }
 
-func (c *Connector) send(msg *ConnectorMsg) error {
+func (c *Connector) send(m *msg) error {
 	c.seq = c.seq + 1
 
-	log.Printf("\t\tCN SEND: %v", msg)
+	log.Printf("\t\tCN SEND: %v", m)
 
-	return c.nls.Send(msg.Bytes())
+	return c.nls.Send(m.bytes())
 }
 
-func (c *Connector) Receive(id *MsgId) (msg *ConnectorMsg, rtype int, err error) {
+// Receive data on this Connector
+func (c *Connector) Receive(id *MsgId) (body []byte, rtype int, err error) {
 	data, err := c.nls.Receive()
 	if err != nil {
 		return
 	}
-	msg, err = parseConnectorMsg(data)
+	m, err := parseConnectorMsg(data)
 	if err != nil {
 		return
 	}
+	body = m.data
 
-	if msg.ack == id.seq+1 {
+	if m.ack == id.seq+1 {
 		rtype = RESPONSE_TYPE_REPLY
-	} else if msg.seq == id.seq {
+	} else if m.seq == id.seq {
 		rtype = RESPONSE_TYPE_ECHO
 	} else {
 		rtype = RESPONSE_TYPE_UNRELATED
 	}
 
-	log.Printf("\t\tCN RECV: %v", msg)
+	log.Printf("\t\tCN RECV: %v", m)
 
 	return
 }
 
-func (msg *ConnectorMsg) String() string {
-	return fmt.Sprintf("ConnectorMsg{%v, seq: %d, ack: %d, data: %d, flags: %d}", msg.id, msg.seq, msg.ack, msg.len, msg.flags)
+func (m *msg) String() string {
+	return fmt.Sprintf("ConnectorMsg{%v, seq: %d, ack: %d, data: %d, flags: %d}", m.id, m.seq, m.ack, m.len, m.flags)
 }
 
+// Request data on this Connector
 func (c *Connector) Request(req []byte) ([]byte, error) {
 	id, err := c.Send(req)
 	if err != nil {
 		return nil, err
 	}
-	res, rtype, err := c.Receive(id)
+	body, rtype, err := c.Receive(id)
 	if err != nil {
 		return nil, err
 	}
@@ -132,57 +132,59 @@ func (c *Connector) Request(req []byte) ([]byte, error) {
 		return nil, fmt.Errorf("unexpected response type %d", rtype)
 	}
 
-	return res.data, nil
+	return body, nil
 }
 
+// MsgId identifies messages
 type MsgId struct {
 	seq uint32
 }
 
+// Send data on this Connector
 func (c *Connector) Send(req []byte) (*MsgId, error) {
 	// TODO remove magic numbers
 	seq := c.seq
-	msg := &ConnectorMsg{c.id, seq, 0, uint16(len(req)), 0, req}
-	return &MsgId{seq}, c.send(msg)
+	m := &msg{c.id, seq, 0, uint16(len(req)), 0, req}
+	return &MsgId{seq}, c.send(m)
 }
 
-func parseConnectorMsg(bs []byte) (*ConnectorMsg, error) {
-	msg := &ConnectorMsg{}
+func parseConnectorMsg(bs []byte) (*msg, error) {
+	m := &msg{}
 	buf := bytes.NewBuffer(bs)
 
 	err := error(nil)
 	// TODO LE vs BE?
-	err = binary.Read(buf, binary.LittleEndian, &msg.id)
-	err = binary.Read(buf, binary.LittleEndian, &msg.seq)
-	err = binary.Read(buf, binary.LittleEndian, &msg.ack)
-	err = binary.Read(buf, binary.LittleEndian, &msg.len)
-	err = binary.Read(buf, binary.LittleEndian, &msg.flags)
+	err = binary.Read(buf, binary.LittleEndian, &m.id)
+	err = binary.Read(buf, binary.LittleEndian, &m.seq)
+	err = binary.Read(buf, binary.LittleEndian, &m.ack)
+	err = binary.Read(buf, binary.LittleEndian, &m.len)
+	err = binary.Read(buf, binary.LittleEndian, &m.flags)
 
-	msg.data = make([]byte, msg.len)
+	m.data = make([]byte, m.len)
 
-	n, err := buf.Read(msg.data)
+	n, err := buf.Read(m.data)
 	if err != nil {
 		return nil, err
 	}
 
-	if n != int(msg.len) {
+	if n != int(m.len) {
 		return nil, errors.New("buffer size mismatch")
 	}
 
-	return msg, nil
+	return m, nil
 }
 
-func (msg *ConnectorMsg) Bytes() []byte {
+func (m *msg) bytes() []byte {
 	buf := new(bytes.Buffer)
 
-	binary.Write(buf, binary.LittleEndian, msg.id.Idx)
-	binary.Write(buf, binary.LittleEndian, msg.id.Val)
-	binary.Write(buf, binary.LittleEndian, msg.seq)
-	binary.Write(buf, binary.LittleEndian, msg.ack)
-	binary.Write(buf, binary.LittleEndian, uint16(len(msg.data)))
-	binary.Write(buf, binary.LittleEndian, msg.flags)
+	binary.Write(buf, binary.LittleEndian, m.id.Idx)
+	binary.Write(buf, binary.LittleEndian, m.id.Val)
+	binary.Write(buf, binary.LittleEndian, m.seq)
+	binary.Write(buf, binary.LittleEndian, m.ack)
+	binary.Write(buf, binary.LittleEndian, uint16(len(m.data)))
+	binary.Write(buf, binary.LittleEndian, m.flags)
 
-	buf.Write(msg.data)
+	buf.Write(m.data)
 
 	return buf.Bytes()
 }
