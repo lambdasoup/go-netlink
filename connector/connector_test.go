@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	CN_NETLINK_USERS = 11 // uapi/conn.h
-	CN_TEST_IDX      = CN_NETLINK_USERS + 3
-	CN_TEST_VAL      = 0x456
+	cnNetlinkUsers = 11
+	cnTestIdx      = cnNetlinkUsers + 3
+	cnTestVal      = 0x456
 )
 
 func TestParseConnectorMessage(t *testing.T) {
@@ -50,8 +50,8 @@ func TestParseConnectorMessage(t *testing.T) {
 
 	t.Log(msg)
 
-	assert(t, msg.id.Idx == CN_TEST_IDX)
-	assert(t, msg.id.Val == CN_TEST_VAL)
+	assert(t, msg.id.idx == cnTestIdx)
+	assert(t, msg.id.val == cnTestVal)
 
 	assert(t, msg.seq == uint32(12345))
 	assert(t, msg.ack == uint32(12346))

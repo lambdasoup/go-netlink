@@ -124,17 +124,17 @@ func (w1 *W1) request(req *W1Msg, statusReplies int) (res *W1Msg, err error) {
 		}
 		msg := parseW1Msg(data)
 		switch rtype {
-		case connector.RESPONSE_TYPE_REPLY:
+		case connector.ResponseTypeReply:
 			log.Printf("\tW1 RECV REPLY: %v", msg)
 			res = msg
-		case connector.RESPONSE_TYPE_ECHO:
+		case connector.ResponseTypeEcho:
 			log.Printf("\tW1 RECV STATUS: %v", msg)
 			if msg.status != 0 {
 				err = fmt.Errorf("status error %d", msg.status)
 				return nil, err
 			}
 			statusReplies--
-		case connector.RESPONSE_TYPE_UNRELATED:
+		case connector.ResponseTypeUnrelated:
 			err = errors.New("received unexpected unrelated response")
 			return nil, err
 		}
@@ -147,28 +147,28 @@ func (w1 *W1) request(req *W1Msg, statusReplies int) (res *W1Msg, err error) {
 func (w1 *W1) send(req *W1Msg) (err error) {
 	log.Printf("\tW1 SEND: %v", req)
 
-	msgId, err := w1.c.Send(req.toBytes())
+	msgID, err := w1.c.Send(req.toBytes())
 	if err != nil {
 		return
 	}
 
-	data, rtype, err := w1.c.Receive(msgId)
+	data, rtype, err := w1.c.Receive(msgID)
 	if err != nil {
 		return
 	}
 
 	msg := parseW1Msg(data)
 	switch rtype {
-	case connector.RESPONSE_TYPE_REPLY:
+	case connector.ResponseTypeReply:
 		return errors.New("received unexpected request response")
-	case connector.RESPONSE_TYPE_ECHO:
+	case connector.ResponseTypeEcho:
 		log.Printf("\tW1 RECV STATUS: %v", msg)
 		if msg.status != 0 {
 			err = fmt.Errorf("status error %d", msg.status)
 			return err
 		}
 		return nil
-	case connector.RESPONSE_TYPE_UNRELATED:
+	case connector.ResponseTypeUnrelated:
 		return errors.New("received unexpected unrelated response")
 	}
 
@@ -177,7 +177,7 @@ func (w1 *W1) send(req *W1Msg) (err error) {
 
 // Open opens a connection to the 1-Wire subsystem
 func (w1 *W1) Open() (err error) {
-	c, err := connector.Open(connector.CbId{connector.CN_W1_IDX, connector.CN_W1_VAL})
+	c, err := connector.Open(connector.W1)
 	w1.c = c
 	return
 }

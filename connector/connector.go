@@ -28,30 +28,36 @@ import (
 	"github.com/lambdasoup/go-netlink/netlink"
 )
 
+// Header length of a Connector message
 const (
-	CNMSG_HDRLEN = 20
+	cnMsgHdrLen = 20
 )
 
 // From uapi/linux/connector.h
 const (
-	CN_W1_IDX = 3
-	CN_W1_VAL = 1
+	cnW1Idx = 3
+	cnW1Val = 1
 )
 
 // Response types
 const (
-	RESPONSE_TYPE_ECHO = iota
-	RESPONSE_TYPE_REPLY
-	RESPONSE_TYPE_UNRELATED
+	ResponseTypeEcho = iota
+	ResponseTypeReply
+	ResponseTypeUnrelated
 )
 
-type CbId struct {
-	Idx uint32
-	Val uint32
+// CbID identifies a Connector subsystem
+type CbID struct {
+	idx uint32
+	val uint32
 }
 
+// W1 is the CbID of the 1-Wire subsystem
+var W1 = CbID{cnW1Idx, cnW1Val}
+
+// msg is a Connector message
 type msg struct {
-	id    CbId
+	id    CbID
 	seq   uint32
 	ack   uint32
 	len   uint16
@@ -62,12 +68,12 @@ type msg struct {
 // Connector is a Linux Connector
 type Connector struct {
 	nls *netlink.Socket
-	id  CbId
+	id  CbID
 	seq uint32
 }
 
 // Open a new Connector
-func Open(id CbId) (*Connector, error) {
+func Open(id CbID) (*Connector, error) {
 	nls, err := netlink.Open()
 	if err != nil {
 		return nil, err
@@ -90,7 +96,7 @@ func (c *Connector) send(m *msg) error {
 }
 
 // Receive data on this Connector
-func (c *Connector) Receive(id *MsgId) (body []byte, rtype int, err error) {
+func (c *Connector) Receive(id *MsgID) (body []byte, rtype int, err error) {
 	data, err := c.nls.Receive()
 	if err != nil {
 		return
@@ -102,11 +108,11 @@ func (c *Connector) Receive(id *MsgId) (body []byte, rtype int, err error) {
 	body = m.data
 
 	if m.ack == id.seq+1 {
-		rtype = RESPONSE_TYPE_REPLY
+		rtype = ResponseTypeReply
 	} else if m.seq == id.seq {
-		rtype = RESPONSE_TYPE_ECHO
+		rtype = ResponseTypeEcho
 	} else {
-		rtype = RESPONSE_TYPE_UNRELATED
+		rtype = ResponseTypeUnrelated
 	}
 
 	log.Printf("\t\tCN RECV: %v", m)
@@ -128,24 +134,24 @@ func (c *Connector) Request(req []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if rtype != RESPONSE_TYPE_REPLY {
+	if rtype != ResponseTypeReply {
 		return nil, fmt.Errorf("unexpected response type %d", rtype)
 	}
 
 	return body, nil
 }
 
-// MsgId identifies messages
-type MsgId struct {
+// MsgID identifies messages
+type MsgID struct {
 	seq uint32
 }
 
 // Send data on this Connector
-func (c *Connector) Send(req []byte) (*MsgId, error) {
+func (c *Connector) Send(req []byte) (*MsgID, error) {
 	// TODO remove magic numbers
 	seq := c.seq
 	m := &msg{c.id, seq, 0, uint16(len(req)), 0, req}
-	return &MsgId{seq}, c.send(m)
+	return &MsgID{seq}, c.send(m)
 }
 
 func parseConnectorMsg(bs []byte) (*msg, error) {
@@ -154,7 +160,8 @@ func parseConnectorMsg(bs []byte) (*msg, error) {
 
 	err := error(nil)
 	// TODO LE vs BE?
-	err = binary.Read(buf, binary.LittleEndian, &m.id)
+	err = binary.Read(buf, binary.LittleEndian, &m.id.idx)
+	err = binary.Read(buf, binary.LittleEndian, &m.id.val)
 	err = binary.Read(buf, binary.LittleEndian, &m.seq)
 	err = binary.Read(buf, binary.LittleEndian, &m.ack)
 	err = binary.Read(buf, binary.LittleEndian, &m.len)
@@ -177,8 +184,8 @@ func parseConnectorMsg(bs []byte) (*msg, error) {
 func (m *msg) bytes() []byte {
 	buf := new(bytes.Buffer)
 
-	binary.Write(buf, binary.LittleEndian, m.id.Idx)
-	binary.Write(buf, binary.LittleEndian, m.id.Val)
+	binary.Write(buf, binary.LittleEndian, m.id.idx)
+	binary.Write(buf, binary.LittleEndian, m.id.val)
 	binary.Write(buf, binary.LittleEndian, m.seq)
 	binary.Write(buf, binary.LittleEndian, m.ack)
 	binary.Write(buf, binary.LittleEndian, uint16(len(m.data)))
