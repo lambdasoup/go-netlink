@@ -28,50 +28,50 @@ import (
 	"github.com/lambdasoup/go-netlink/log"
 )
 
-type w1CmdType uint8
+type cmdType uint8
 
 // From drivers/w1/w1_netlink.h
 const (
-	W1_CMD_READ w1CmdType = iota
-	W1_CMD_WRITE
-	W1_CMD_SEARCH
-	W1_CMD_ALARM_SEARCH
-	W1_CMD_TOUCH
-	W1_CMD_RESET
-	W1_CMD_SLAVE_ADD
-	W1_CMD_SLAVE_REMOVE
-	W1_CMD_LIST_SLAVES
+	cmdRead cmdType = iota
+	cmdWrite
+	cmdSearch
+	cmdAlarmSearch
+	cmdTouch
+	cmdReset
+	cmdSlaveAdd
+	cmdSlaveRemove
+	cmdListSlaves
 )
 
-type w1MsgType uint8
+type msgType uint8
 
 // One-Wire command types
 const (
-	W1_SLAVE_ADD w1MsgType = iota
-	W1_SLAVE_REMOVE
-	W1_MASTER_ADD
-	W1_MASTER_REMOVE
-	W1_MASTER_CMD
-	W1_SLAVE_CMD
-	W1_LIST_MASTERS
+	slaveAdd msgType = iota
+	slaveRemove
+	masterAdd
+	masterRemove
+	masterCmd
+	slaveCmd
+	listMasters
 )
 
-// W1Cmd is a One-Wire command
+// Cmd is a 1-Wire command
 // From drivers/w1/w1_netlink.h
-type W1Cmd struct {
-	cmd  w1CmdType
+type cmd struct {
+	cmd  cmdType
 	res  uint8
 	data []byte
 }
 
-func (cmd *W1Cmd) String() string {
-	return fmt.Sprintf("W1Cmd{%v, data %x}", cmd.cmd, cmd.data)
+func (c *cmd) String() string {
+	return fmt.Sprintf("W1Cmd{%v, data %x}", c.cmd, c.data)
 }
 
-// W1Msg is a 1-Wire message
+// Msg is a 1-Wire message
 // From drivers/w1/w1_netlink.h
-type W1Msg struct {
-	w1Type w1MsgType
+type msg struct {
+	w1Type msgType
 	status uint8
 	len    uint16
 	master *Master
@@ -80,8 +80,9 @@ type W1Msg struct {
 	data   []byte
 }
 
-func (msg *W1Msg) String() string {
-	return fmt.Sprintf("W1Msg{%v, status %v, len %v, master %v, slave %v, data %x}", msg.w1Type, msg.status, len(msg.data), msg.master, msg.slave, msg.data)
+func (m *msg) String() string {
+	return fmt.Sprintf("W1Msg{%v, status %v, len %v, master %v, slave %v, data %x}",
+		m.w1Type, m.status, len(m.data), m.master, m.slave, m.data)
 }
 
 // W1 is a 1-Wire connection
@@ -94,7 +95,7 @@ func (w1 *W1) ListMasters() (masters []Master, err error) {
 	log.Print("W1 LIST MASTERS")
 
 	// send search request
-	cmd := &W1Msg{W1_LIST_MASTERS, 0, 0, nil, nil, 0, nil}
+	cmd := &msg{listMasters, 0, 0, nil, nil, 0, nil}
 	msg, err := w1.request(cmd, -1)
 	if err != nil {
 		return
@@ -108,10 +109,10 @@ func (w1 *W1) ListMasters() (masters []Master, err error) {
 	return
 }
 
-func (w1 *W1) request(req *W1Msg, statusReplies int) (res *W1Msg, err error) {
+func (w1 *W1) request(req *msg, statusReplies int) (res *msg, err error) {
 	log.Printf("\tW1 REQUEST: %v", req)
 
-	msgId, err := w1.c.Send(req.toBytes())
+	msgID, err := w1.c.Send(req.toBytes())
 	if err != nil {
 		return
 	}
@@ -119,7 +120,7 @@ func (w1 *W1) request(req *W1Msg, statusReplies int) (res *W1Msg, err error) {
 	// we need to await all status replies and the actual response
 	// these are all out-of-order
 	for statusReplies > 0 || res == nil {
-		data, rtype, err := w1.c.Receive(msgId)
+		data, rtype, err := w1.c.Receive(msgID)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +146,7 @@ func (w1 *W1) request(req *W1Msg, statusReplies int) (res *W1Msg, err error) {
 	return
 }
 
-func (w1 *W1) send(req *W1Msg) (err error) {
+func (w1 *W1) send(req *msg) (err error) {
 	log.Printf("\tW1 SEND: %v", req)
 
 	msgID, err := w1.c.Send(req.toBytes())
@@ -188,19 +189,19 @@ func (w1 *W1) Close() {
 	w1.c.Close()
 }
 
-func (cmd *W1Cmd) toBytes() []byte {
+func (c *cmd) toBytes() []byte {
 	buf := new(bytes.Buffer)
 
-	binary.Write(buf, binary.LittleEndian, cmd.cmd)
-	binary.Write(buf, binary.LittleEndian, cmd.res)
-	binary.Write(buf, binary.LittleEndian, uint16(len(cmd.data)))
-	buf.Write(cmd.data)
+	binary.Write(buf, binary.LittleEndian, c.cmd)
+	binary.Write(buf, binary.LittleEndian, c.res)
+	binary.Write(buf, binary.LittleEndian, uint16(len(c.data)))
+	buf.Write(c.data)
 
 	return buf.Bytes()
 }
 
-func parseW1Msg(bs []byte) *W1Msg {
-	msg := &W1Msg{}
+func parseW1Msg(bs []byte) *msg {
+	msg := &msg{}
 	buf := bytes.NewBuffer(bs)
 
 	binary.Read(buf, binary.LittleEndian, &msg.w1Type)
@@ -209,18 +210,18 @@ func parseW1Msg(bs []byte) *W1Msg {
 
 	// master or slave id depending on msg type
 	switch msg.w1Type {
-	case W1_SLAVE_ADD, W1_SLAVE_REMOVE, W1_SLAVE_CMD:
+	case slaveAdd, slaveRemove, slaveCmd:
 		msg.slave = new(Slave)
 		binary.Read(buf, binary.LittleEndian, &msg.slave.family)
 		binary.Read(buf, binary.LittleEndian, &msg.slave.uid)
 		binary.Read(buf, binary.LittleEndian, &msg.slave.crc)
 
-	case W1_MASTER_ADD, W1_MASTER_REMOVE, W1_MASTER_CMD:
+	case masterAdd, masterRemove, masterCmd:
 		msg.master = new(Master)
 		binary.Read(buf, binary.LittleEndian, &msg.master.id)
 		buf.Next(4)
 
-	case W1_LIST_MASTERS:
+	case listMasters:
 		buf.Next(8)
 	}
 
@@ -230,26 +231,26 @@ func parseW1Msg(bs []byte) *W1Msg {
 	return msg
 }
 
-func (msg *W1Msg) toBytes() []byte {
+func (m *msg) toBytes() []byte {
 	buf := new(bytes.Buffer)
 
-	binary.Write(buf, binary.LittleEndian, msg.w1Type)
-	binary.Write(buf, binary.LittleEndian, msg.status)
-	binary.Write(buf, binary.LittleEndian, msg.len)
+	binary.Write(buf, binary.LittleEndian, m.w1Type)
+	binary.Write(buf, binary.LittleEndian, m.status)
+	binary.Write(buf, binary.LittleEndian, m.len)
 	// some messages do not have a master set
-	if msg.master != nil {
-		binary.Write(buf, binary.LittleEndian, msg.master.id)
-		binary.Write(buf, binary.LittleEndian, msg.res)
-	} else if msg.slave != nil {
-		binary.Write(buf, binary.LittleEndian, msg.slave.family)
-		binary.Write(buf, binary.LittleEndian, msg.slave.uid)
-		binary.Write(buf, binary.LittleEndian, msg.slave.crc)
+	if m.master != nil {
+		binary.Write(buf, binary.LittleEndian, m.master.id)
+		binary.Write(buf, binary.LittleEndian, m.res)
+	} else if m.slave != nil {
+		binary.Write(buf, binary.LittleEndian, m.slave.family)
+		binary.Write(buf, binary.LittleEndian, m.slave.uid)
+		binary.Write(buf, binary.LittleEndian, m.slave.crc)
 	} else {
 		binary.Write(buf, binary.LittleEndian, uint32(0))
-		binary.Write(buf, binary.LittleEndian, msg.res)
+		binary.Write(buf, binary.LittleEndian, m.res)
 	}
 
-	buf.Write(msg.data)
+	buf.Write(m.data)
 
 	return buf.Bytes()
 }
@@ -261,19 +262,19 @@ type Master struct {
 }
 
 // Close this Slave's connection
-func (m *Master) Close() {
-	m.w1.Close()
+func (ms *Master) Close() {
+	ms.w1.Close()
 }
 
 // ListSlaves returns a list of this master's slaves
-func (m *Master) ListSlaves() (slaves []Slave, err error) {
+func (ms *Master) ListSlaves() (slaves []Slave, err error) {
 	log.Print("W1 LIST SLAVES")
 
 	// send list slaves request
-	cmd := W1Cmd{W1_CMD_LIST_SLAVES, 0, nil}
-	req := &W1Msg{W1_MASTER_CMD, 0, uint16(len(cmd.toBytes())), m, nil, 0, cmd.toBytes()}
+	c := cmd{cmdListSlaves, 0, nil}
+	req := &msg{masterCmd, 0, uint16(len(c.toBytes())), ms, nil, 0, c.toBytes()}
 
-	msg, err := m.w1.request(req, 1)
+	msg, err := ms.w1.request(req, 1)
 	if err != nil {
 		return
 	}
@@ -286,27 +287,27 @@ func (m *Master) ListSlaves() (slaves []Slave, err error) {
 		binary.Read(buf, binary.LittleEndian, &slave.family)
 		binary.Read(buf, binary.LittleEndian, &slave.uid)
 		binary.Read(buf, binary.LittleEndian, &slave.crc)
-		slave.master = m
+		slave.master = ms
 		slaves = append(slaves, *slave)
 	}
 
 	return
 }
 
-func (m *Master) readSlave(slave *Slave, args []byte, count int) (data []byte, err error) {
+func (ms *Master) readSlave(slave *Slave, args []byte, count int) (data []byte, err error) {
 	log.Print("W1 READ SLAVE")
 
-	cmdW := W1Cmd{W1_CMD_WRITE, 0, args}
-	cmdR := W1Cmd{W1_CMD_READ, 0, make([]byte, count)}
+	cmdW := cmd{cmdWrite, 0, args}
+	cmdR := cmd{cmdRead, 0, make([]byte, count)}
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 	buf.Write(cmdW.toBytes())
 	buf.Write(cmdR.toBytes())
 	cmd := buf.Bytes()
 
-	req := &W1Msg{W1_SLAVE_CMD, 0, uint16(len(cmd)), nil, slave, 0, cmd}
+	req := &msg{slaveCmd, 0, uint16(len(cmd)), nil, slave, 0, cmd}
 
-	msg, err := m.w1.request(req, 2)
+	msg, err := ms.w1.request(req, 2)
 	if err != nil {
 		return
 	}
@@ -316,13 +317,13 @@ func (m *Master) readSlave(slave *Slave, args []byte, count int) (data []byte, e
 	return
 }
 
-func (m *Master) writeSlave(slave *Slave, args []byte) (err error) {
+func (ms *Master) writeSlave(slave *Slave, args []byte) (err error) {
 	log.Print("W1 WRITE SLAVE")
 
-	cmd := W1Cmd{W1_CMD_WRITE, 0, args}
-	req := &W1Msg{W1_SLAVE_CMD, 0, uint16(len(cmd.toBytes())), nil, slave, 0, cmd.toBytes()}
+	cmd := cmd{cmdWrite, 0, args}
+	req := &msg{slaveCmd, 0, uint16(len(cmd.toBytes())), nil, slave, 0, cmd.toBytes()}
 
-	err = m.w1.send(req)
+	err = ms.w1.send(req)
 	return
 }
 
