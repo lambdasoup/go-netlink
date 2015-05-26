@@ -1,3 +1,2 @@
 language: go
-install:
-script: go test ./w1 ./ibutton ./netlink ./connector
+before_install: rm -r ./ibutton/ibutton-gui

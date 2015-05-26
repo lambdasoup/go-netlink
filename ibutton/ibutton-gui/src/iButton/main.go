@@ -11,6 +11,10 @@ type App struct {
     State string
 }
 
+type Status struct {
+    Time string
+}
+
 func main() {
         err := qml.Run(run)
         if err != nil {
@@ -19,6 +23,10 @@ func main() {
 }
 
 func run() error {
+        qml.RegisterTypes("GoExtensions", 1, 0, []qml.TypeSpec{{
+            Init: func(s *Status, obj qml.Object) { s.Time = "" },
+        }})
+
         engine := qml.NewEngine()
         component, err := engine.LoadFile("share/iButton/Main.qml")
         if err != nil {
@@ -27,6 +35,7 @@ func run() error {
 
        app := App{new(ibutton.Button), engine.Context(), "DISCONNECTED"}
        app.SetVar("app", &app)
+       app.SetVar("mainVoew.status2", &Status{})
 
        window := component.CreateWindow(nil)
        window.Show()
@@ -65,12 +74,13 @@ func (app *App) Error() {
 // Update the button status
 func (app *App) Update() {
     go func() {
-        status, err := app.Status()
+        _, err := app.Status()
         if err != nil {
             app.Error()
             return
         }
-        app.SetVar("status", status.Time().String())
+        status := app.Object("status").(Status)
+        qml.Changed(status, &status.Time)
     }()
 }
 

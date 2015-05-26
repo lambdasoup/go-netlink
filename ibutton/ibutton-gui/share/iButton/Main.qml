@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Ubuntu.Components 1.2
+import GoExtensions 1.0
 
 /*!
     \brief MainView with a Label and Button elements.
@@ -11,6 +12,11 @@ MainView {
 
     width: units.gu(100)
     height: units.gu(75)
+
+    Status {
+        id: status
+        time: "-"
+    }
 
     Page {
         id: page2
@@ -53,7 +59,7 @@ MainView {
             Label {
                 id: labelStatus
                 objectName: "label"
-                text: status
+                text: status.time
             }
 
         }
