@@ -1,1 +1,2 @@
 language: go
+script: go test ./w1 ./ibutton ./netlink ./connector
