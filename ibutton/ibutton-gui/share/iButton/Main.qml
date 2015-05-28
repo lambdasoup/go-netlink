@@ -1,11 +1,13 @@
 import QtQuick 2.0
+import QtQuick.Layouts 1.1
+import QtQuick.Controls 1.3
 import Ubuntu.Components 1.2
 import GoExtensions 1.0
 
+
 /*!
     \brief MainView with a Label and Button elements.
-*/
-
+                            */
 MainView {
     objectName: "main"
     applicationName: "ibutton.mh"
@@ -24,51 +26,99 @@ MainView {
     }
 
     Page {
-        id: page2
         title: i18n.tr("iButton")
 
-        Column {
-            spacing: units.gu(1)
-            anchors {
-                margins: units.gu(2)
-                fill: parent
+        ColumnLayout {
+
+            GridLayout {
+                columns: 2
+
+            GroupBox {
+                title: "Status"
+
+                GridLayout {
+                    columns: 2
+                    rowSpacing: units.gu(1)
+                    columnSpacing: units.gu(1)
+                    anchors {
+                        margins: units.gu(2)
+                    }
+
+                    Label {
+                        text: "Button time"
+                    }
+                    Label {
+                        text: status.time
+                    }
+
+                    Label {
+                        text: "Sample count"
+                    }
+                    Label {
+                        text: status.count
+                    }
+
+                    Label {
+                        text: "Mission status"
+                    }
+                    Label {
+                        text: status.missionStatus
+                    }
+
+                    Button {
+                        objectName: "button"
+                        text: i18n.tr("Update Status")
+                        onClicked: status.update()
+                    }
+                }
             }
 
-            Button {
-                objectName: "button"
-                width: parent.width
-                text: i18n.tr("Connect")
-                onClicked: app.connect()
+            GroupBox {
+                title: "Connection"
+
+                ColumnLayout {
+                    Label {
+                        objectName: "label"
+                        text: app.state
+                    }
+
+                    Button {
+                        objectName: "button"
+                        text: i18n.tr("Connect")
+                        onClicked: app.connect()
+                    }
+
+                    Button {
+                        objectName: "button"
+                        text: i18n.tr("Disconnect")
+                        onClicked: app.disconnect()
+                    }
+                }
             }
 
-            Button {
-                objectName: "button"
-                width: parent.width
-                text: i18n.tr("Disconnect")
-                onClicked: app.disconnect()
-            }
+            GroupBox {
+                title: "Mission Log"
 
-            Label {
-                id: labelState
-                objectName: "label"
-                text: app.state
-            }
+                ColumnLayout {
+                    Label {
+                        objectName: "label"
+                        text: app.state
+                    }
 
-            Button {
-                objectName: "button"
-                width: parent.width
-                text: i18n.tr("Update Status")
-                onClicked: status.update()
-            }
+                    Button {
+                        objectName: "button"
+                        text: i18n.tr("Connect")
+                        onClicked: app.connect()
+                    }
 
-            Label {
-                id: labelStatus
-                objectName: "label"
-                text: status.time
+                    Button {
+                        objectName: "button"
+                        text: i18n.tr("Disconnect")
+                        onClicked: app.disconnect()
+                    }
+                }
             }
-
+            }
         }
     }
-
 }
-

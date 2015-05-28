@@ -13,6 +13,8 @@ type App struct {
 type Status struct {
 	App  *App
 	Time string
+	Count uint32
+	Running bool
 }
 
 func main() {
@@ -81,6 +83,26 @@ func (s *Status) Update() {
 
 	s.Time = status.Time().String()
 	qml.Changed(s, &s.Time)
+
+	s.Count = status.SampleCount()
+	qml.Changed(s, &s.Count)
+
+	s.Running = status.MissionInProgress()
+	qml.Changed(s, &s.Running)
+
+//		fmt.Printf("time:           %v\n", status.Time())
+//		fmt.Printf("model:          %v\n", status.Name())
+//		fmt.Printf("timestamp:      %v\n", status.MissionTimestamp())
+//		fmt.Printf("count:          %v\n", status.SampleCount())
+//		fmt.Printf("running:        %v\n", status.MissionInProgress())
+//		fmt.Printf("memory cleared: %v\n", status.MemoryCleared())
+//		fmt.Printf("resolution:     %v\n", func() string {
+//			if status.HighResolution() {
+//				return "0.0625°C"
+//			}
+//			return "0.5°C"
+//		}())
+//		fmt.Printf("rate:           %v\n", status.SampleRate())
 }
 
 func (app *App) state(newState string) {
