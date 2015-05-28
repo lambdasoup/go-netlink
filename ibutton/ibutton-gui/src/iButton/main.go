@@ -16,7 +16,10 @@ type Status struct {
 	App  *App
 	Time string
 	Count uint32
-	Running bool
+	MissionProgress string
+	Rate string
+	Resolution string
+	StartedTime string
 }
 
 type Samples struct {
@@ -78,9 +81,49 @@ func (app *App) Disconnect() {
 	}()
 }
 
+// Start mission
+func (app *App) Start() {
+	go func() {
+		err := app.ibutton.WriteScratchpad()
+		if err != nil {
+			app.Error()
+		}
+		data, err := app.ibutton.ReadScratchpad()
+		if err != nil {
+			app.Error()
+		}
+		// verify transfer status register
+		if data[2] != byte(0x1F) {
+			app.Error()
+		}
+		err = app.ibutton.CopyScratchpad()
+		if err != nil {
+			app.Error()
+		}
+		err = app.ibutton.StartMission()
+		if err != nil {
+			app.Error()
+		}
+	}()
+}
+
+// Stop mission
+func (app *App) Stop() {
+	go func() {
+		app.ibutton.StopMission()
+	}()
+}
+
+// Clear mission log
+func (app *App) Clear() {
+	go func() {
+		app.ibutton.ClearMemory()
+	}()
+}
+
 // Error displays an error message
 func (app *App) Error() {
-	// TODO show error
+	panic("generic error")
 }
 
 // Update the button status
@@ -93,25 +136,28 @@ func (s *Status) Update() {
 	s.Time = status.Time().String()
 	qml.Changed(s, &s.Time)
 
+	s.Rate = fmt.Sprintf("%v", status.SampleRate())
+	qml.Changed(s, &s.Rate)
+
+	if status.HighResolution() {
+			s.Resolution = "0.0625°C"
+	} else {
+			s.Resolution = "0.5°C"
+	}
+	qml.Changed(s, &s.Resolution)
+
 	s.Count = status.SampleCount()
 	qml.Changed(s, &s.Count)
 
-	s.Running = status.MissionInProgress()
-	qml.Changed(s, &s.Running)
+	if status.MissionInProgress() {
+		s.MissionProgress = "RUNNING"
+	} else {
+		s.MissionProgress = "STOPPED"
+	}
+	qml.Changed(s, &s.MissionProgress)
 
-//		fmt.Printf("time:           %v\n", status.Time())
-//		fmt.Printf("model:          %v\n", status.Name())
-//		fmt.Printf("timestamp:      %v\n", status.MissionTimestamp())
-//		fmt.Printf("count:          %v\n", status.SampleCount())
-//		fmt.Printf("running:        %v\n", status.MissionInProgress())
-//		fmt.Printf("memory cleared: %v\n", status.MemoryCleared())
-//		fmt.Printf("resolution:     %v\n", func() string {
-//			if status.HighResolution() {
-//				return "0.0625°C"
-//			}
-//			return "0.5°C"
-//		}())
-//		fmt.Printf("rate:           %v\n", status.SampleRate())
+	s.StartedTime = status.MissionTimestamp().String()
+	qml.Changed(s, &s.StartedTime)
 }
 
 func (app *App) ReadLog() {

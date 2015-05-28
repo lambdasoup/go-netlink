@@ -31,7 +31,7 @@ MainView {
         ColumnLayout {
 
             GridLayout {
-                columns: 2
+                columns: 3
 
                 GroupBox {
                     title: "Status"
@@ -52,23 +52,26 @@ MainView {
                         }
 
                         Label {
-                            text: "Sample count"
+                            text: "Sample rate"
                         }
                         Label {
-                            text: status.count
+                            text: status.rate
                         }
 
                         Label {
-                            text: "Mission status"
+                            text: "Resolution"
                         }
                         Label {
-                            text: status.missionStatus
+                            text: status.resolution
                         }
 
                         Button {
-                            objectName: "button"
                             text: i18n.tr("Update Status")
                             onClicked: status.update()
+                        }
+                        Button {
+                            text: i18n.tr("Clear Memory")
+                            onClicked: app.clear()
                         }
                     }
                 }
@@ -78,7 +81,6 @@ MainView {
 
                     ColumnLayout {
                         Label {
-                            objectName: "label"
                             text: app.state
                         }
 
@@ -93,6 +95,49 @@ MainView {
                         }
                     }
                 }
+
+                GroupBox {
+                    title: "Mission"
+
+                    GridLayout {
+                        columns: 2
+                        rowSpacing: units.gu(1)
+                        columnSpacing: units.gu(1)
+                        anchors {
+                            margins: units.gu(2)
+                        }
+
+                        Label {
+                            text: "Status"
+                        }
+                        Label {
+                            text: status.missionProgress
+                        }
+
+                        Label {
+                            text: "Started"
+                        }
+                        Label {
+                            text: status.startedTime
+                        }
+
+                        Label {
+                            text: "Sample count"
+                        }
+                        Label {
+                            text: status.count
+                        }
+
+                        Button {
+                            text: i18n.tr("Start")
+                            onClicked: app.start()
+                        }
+                        Button {
+                            text: i18n.tr("Stop")
+                            onClicked: app.stop()
+                        }
+                }
+}
                                 }
 
                 GroupBox {
