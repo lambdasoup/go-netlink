@@ -7,15 +7,20 @@ import GoExtensions 1.0
 */
 
 MainView {
-    objectName: "mainView"
+    objectName: "main"
     applicationName: "ibutton.mh"
 
     width: units.gu(100)
     height: units.gu(75)
 
+    App {
+        id: app
+    }
+
     Status {
         id: status
-        time: "-"
+        time: "ROFL"
+        app: app
     }
 
     Page {
@@ -53,7 +58,7 @@ MainView {
                 objectName: "button"
                 width: parent.width
                 text: i18n.tr("Update Status")
-                onClicked: app.update()
+                onClicked: status.update()
             }
 
             Label {
