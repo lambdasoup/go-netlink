@@ -3,11 +3,13 @@ package main
 import (
 	"github.com/lambdasoup/go-netlink/ibutton"
 	"gopkg.in/qml.v1"
+	"fmt"
 )
 
 type App struct {
 	ibutton *ibutton.Button
 	State   string
+	Samples *Samples
 }
 
 type Status struct {
@@ -15,6 +17,12 @@ type Status struct {
 	Time string
 	Count uint32
 	Running bool
+}
+
+type Samples struct {
+	Len int
+	Times []string
+	Temps []string
 }
 
 func main() {
@@ -31,6 +39,7 @@ func run() error {
 		Init: func(a *App, obj qml.Object) {
 			a.ibutton = new(ibutton.Button)
 			a.State = "DISCONNECTED"
+			a.Samples = new(Samples)
 		},
 	}})
 
@@ -104,6 +113,28 @@ func (s *Status) Update() {
 //		}())
 //		fmt.Printf("rate:           %v\n", status.SampleRate())
 }
+
+func (app *App) ReadLog() {
+	samples, err := app.ibutton.ReadLog()
+	app.Samples.Len = len(samples)
+	for _, sample := range samples {
+		app.Samples.Times = append(app.Samples.Times, fmt.Sprintf("%v", sample.Time))
+		app.Samples.Temps = append(app.Samples.Temps, fmt.Sprintf("%3.3f°C", sample.Temp))
+	}
+	if err != nil {
+		app.Error()
+	}
+	qml.Changed(app, &app.Samples)
+}
+
+func (app *App) SampleTemp(i int) string {
+	return fmt.Sprintf("%s", app.Samples.Temps[i])
+}
+
+func (app *App) SampleTime(i int) string {
+	return fmt.Sprintf("%s", app.Samples.Times[i])
+}
+
 
 func (app *App) state(newState string) {
 	app.State = newState

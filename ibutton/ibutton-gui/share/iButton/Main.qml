@@ -7,7 +7,7 @@ import GoExtensions 1.0
 
 /*!
     \brief MainView with a Label and Button elements.
-                            */
+                                    */
 MainView {
     objectName: "main"
     applicationName: "ibutton.mh"
@@ -33,91 +33,99 @@ MainView {
             GridLayout {
                 columns: 2
 
-            GroupBox {
-                title: "Status"
+                GroupBox {
+                    title: "Status"
 
-                GridLayout {
-                    columns: 2
-                    rowSpacing: units.gu(1)
-                    columnSpacing: units.gu(1)
-                    anchors {
-                        margins: units.gu(2)
-                    }
+                    GridLayout {
+                        columns: 2
+                        rowSpacing: units.gu(1)
+                        columnSpacing: units.gu(1)
+                        anchors {
+                            margins: units.gu(2)
+                        }
 
-                    Label {
-                        text: "Button time"
-                    }
-                    Label {
-                        text: status.time
-                    }
+                        Label {
+                            text: "Button time"
+                        }
+                        Label {
+                            text: status.time
+                        }
 
-                    Label {
-                        text: "Sample count"
-                    }
-                    Label {
-                        text: status.count
-                    }
+                        Label {
+                            text: "Sample count"
+                        }
+                        Label {
+                            text: status.count
+                        }
 
-                    Label {
-                        text: "Mission status"
-                    }
-                    Label {
-                        text: status.missionStatus
-                    }
+                        Label {
+                            text: "Mission status"
+                        }
+                        Label {
+                            text: status.missionStatus
+                        }
 
-                    Button {
-                        objectName: "button"
-                        text: i18n.tr("Update Status")
-                        onClicked: status.update()
+                        Button {
+                            objectName: "button"
+                            text: i18n.tr("Update Status")
+                            onClicked: status.update()
+                        }
                     }
                 }
-            }
 
-            GroupBox {
-                title: "Connection"
+                GroupBox {
+                    title: "Connection"
 
-                ColumnLayout {
-                    Label {
-                        objectName: "label"
-                        text: app.state
-                    }
+                    ColumnLayout {
+                        Label {
+                            objectName: "label"
+                            text: app.state
+                        }
 
-                    Button {
-                        objectName: "button"
-                        text: i18n.tr("Connect")
-                        onClicked: app.connect()
-                    }
+                        Button {
+                            text: i18n.tr("Connect")
+                            onClicked: app.connect()
+                        }
 
-                    Button {
-                        objectName: "button"
-                        text: i18n.tr("Disconnect")
-                        onClicked: app.disconnect()
+                        Button {
+                            text: i18n.tr("Disconnect")
+                            onClicked: app.disconnect()
+                        }
                     }
                 }
-            }
+                                }
 
-            GroupBox {
-                title: "Mission Log"
+                GroupBox {
+                    title: "Mission Log"
 
-                ColumnLayout {
-                    Label {
-                        objectName: "label"
-                        text: app.state
+
+                    Component {
+                        id: sampleDelegate
+                        Row {
+                            spacing: 10
+                            Text {
+                                text: app.sampleTime(index)
+                            }
+                            Text {
+                                text: app.sampleTemp(index)
+                            }
+                        }
                     }
 
-                    Button {
-                        objectName: "button"
-                        text: i18n.tr("Connect")
-                        onClicked: app.connect()
+                    Column {
+                        Button {
+                            text: i18n.tr("Read Log")
+                            onClicked: app.readLog()
+                        }
+
+                        ListView {
+                            width: units.gu(90)
+                            height: units.gu(30)
+                            model: app.samples.len
+                            delegate: sampleDelegate
+                        }
                     }
 
-                    Button {
-                        objectName: "button"
-                        text: i18n.tr("Disconnect")
-                        onClicked: app.disconnect()
-                    }
-                }
-            }
             }
         }
     }
