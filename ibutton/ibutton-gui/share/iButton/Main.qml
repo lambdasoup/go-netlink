@@ -25,6 +25,11 @@ MainView {
         app: app
     }
 
+    // automatic connection handling
+    // note that onDestruction is not guaranteed to be called at all
+    Component.onCompleted: app.connect()
+    Component.onDestruction: app.disconnect()
+
     Page {
         title: i18n.tr("iButton")
 
@@ -72,26 +77,6 @@ MainView {
                         Button {
                             text: i18n.tr("Clear Memory")
                             onClicked: app.clear()
-                        }
-                    }
-                }
-
-                GroupBox {
-                    title: "Connection"
-
-                    ColumnLayout {
-                        Label {
-                            text: app.state
-                        }
-
-                        Button {
-                            text: i18n.tr("Connect")
-                            onClicked: app.connect()
-                        }
-
-                        Button {
-                            text: i18n.tr("Disconnect")
-                            onClicked: app.disconnect()
                         }
                     }
                 }

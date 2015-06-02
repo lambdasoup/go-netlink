@@ -75,10 +75,8 @@ func (app *App) Connect() {
 
 // Disconnect the iButton
 func (app *App) Disconnect() {
-	go func() {
-		app.ibutton.Close()
-		app.state("DISCONNECTED")
-	}()
+	app.ibutton.Close()
+	app.state("DISCONNECTED")
 }
 
 // Start mission
