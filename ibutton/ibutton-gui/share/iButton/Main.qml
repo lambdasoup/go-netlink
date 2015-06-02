@@ -102,6 +102,11 @@ MainView {
                     Text {
                         text: app.sampleTemp(index)
                     }
+                    Rectangle {
+                        width: units.gu(1)
+                        height: units.gu(1)
+                        color: app.sampleColor(index)
+                    }
                 }
             }
 

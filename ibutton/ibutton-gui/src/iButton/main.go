@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/lambdasoup/go-netlink/ibutton"
 	"gopkg.in/qml.v1"
+	"image/color"
 )
 
 type App struct {
@@ -26,7 +27,7 @@ type Status struct {
 type Samples struct {
 	Len   int
 	Times []string
-	Temps []string
+	Temps []ibutton.Temperature
 }
 
 func main() {
@@ -153,7 +154,7 @@ func (app *App) ReadLog() {
 	app.Samples.Len = len(samples)
 	for _, sample := range samples {
 		app.Samples.Times = append(app.Samples.Times, fmt.Sprintf("%v", sample.Time))
-		app.Samples.Temps = append(app.Samples.Temps, fmt.Sprintf("%3.3f°C", sample.Temp))
+		app.Samples.Temps = append(app.Samples.Temps, sample.Temp)
 	}
 	if err != nil {
 		app.Error()
@@ -162,9 +163,15 @@ func (app *App) ReadLog() {
 }
 
 func (app *App) SampleTemp(i int) string {
-	return fmt.Sprintf("%s", app.Samples.Temps[i])
+	return fmt.Sprintf("%3.3f°C", app.Samples.Temps[i])
 }
 
 func (app *App) SampleTime(i int) string {
 	return fmt.Sprintf("%s", app.Samples.Times[i])
+}
+
+func (app *App) SampleColor(i int) color.RGBA {
+	red := uint8(app.Samples.Temps[i] * 8)
+	blue := 255 - red
+	return color.RGBA{red, 0, blue, 0xff}
 }
