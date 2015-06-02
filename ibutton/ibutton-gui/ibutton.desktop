@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=ibutton
+Exec=iButton
+Icon=iButton.png
+Terminal=false
+Type=Application
+X-Ubuntu-Touch=true
+

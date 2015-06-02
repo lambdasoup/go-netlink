@@ -1,0 +1,15 @@
+{
+    "name": "ibutton.mh",
+    "description": "description of iButton",
+    "architecture": "all",
+    "title": "iButton",
+    "hooks": {
+        "ibutton": {
+            "apparmor": "ibutton.apparmor",
+            "desktop": "ibutton.desktop"
+        }
+    },
+    "version": "0.1",
+    "maintainer": "Max Hille <mh@lambdasoup.com>",
+    "framework": "ubuntu-sdk-15.04"
+}

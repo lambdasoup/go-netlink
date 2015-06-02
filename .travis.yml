@@ -1,1 +1,2 @@
 language: go
+before_install: rm -r ./ibutton/ibutton-gui
