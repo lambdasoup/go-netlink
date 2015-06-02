@@ -7,7 +7,7 @@ import GoExtensions 1.0
 
 /*!
     \brief MainView with a Label and Button elements.
-                                    */
+                                                */
 MainView {
     objectName: "main"
     applicationName: "ibutton.mh"
@@ -19,14 +19,16 @@ MainView {
         id: app
         status: Status {
             time: "ROFL"
-            onCountChanged: if (count > 0) app.readLog()
+            onCountChanged: if (count > 0)
+                                app.readLog()
             onClearedChanged: {
                 app.update()
                 app.start()
             }
         }
 
-        onStateChanged: if (state == "CONNECTED") app.update()
+        onStateChanged: if (state == "CONNECTED")
+                            app.update()
     }
 
     // automatic connection handling
@@ -41,125 +43,61 @@ MainView {
 
             GridLayout {
                 columns: 2
-
-                GroupBox {
-                    title: "Status"
-
-                    GridLayout {
-                        columns: 2
-                        rowSpacing: units.gu(1)
-                        columnSpacing: units.gu(1)
-                        anchors {
-                            margins: units.gu(2)
-                        }
-
-                        Label {
-                            text: "Button time"
-                        }
-                        Label {
-                            text: app.status.time
-                        }
-
-                        Label {
-                            text: "Sample rate"
-                        }
-                        Label {
-                            text: app.status.rate
-                        }
-
-                        Label {
-                            text: "Resolution"
-                        }
-                        Label {
-                            text: app.status.resolution
-                        }
-
-                        Button {
-                            text: i18n.tr("Update Status")
-                            onClicked: app.update()
-                        }
-                        Button {
-                            text: i18n.tr("Clear Memory")
-                            onClicked: app.clear()
-                        }
-                    }
+                rowSpacing: units.gu(1)
+                columnSpacing: units.gu(1)
+                anchors {
+                    margins: units.gu(2)
                 }
 
-                GroupBox {
-                    title: "Mission"
-
-                    GridLayout {
-                        columns: 2
-                        rowSpacing: units.gu(1)
-                        columnSpacing: units.gu(1)
-                        anchors {
-                            margins: units.gu(2)
-                        }
-
-                        Label {
-                            text: "Status"
-                        }
-                        Label {
-                            text: app.status.missionProgress
-                        }
-
-                        Label {
-                            text: "Started"
-                        }
-                        Label {
-                            text: app.status.startedTime
-                        }
-
-                        Label {
-                            text: "Sample count"
-                        }
-                        Label {
-                            text: app.status.count
-                        }
-
-                        Button {
-                            text: i18n.tr("Start")
-                            onClicked: app.start()
-                        }
-                        Button {
-                            text: i18n.tr("Stop")
-                            onClicked: app.stop()
-                        }
+                Label {
+                    text: "Status"
                 }
-}
-                                }
+                Label {
+                    text: app.status.missionProgress
+                }
 
-                GroupBox {
-                    title: "Mission Log"
+                Label {
+                    text: "Started"
+                }
+                Label {
+                    text: app.status.startedTime
+                }
 
+                Label {
+                    text: "Sample count"
+                }
+                Label {
+                    text: app.status.count
+                }
 
-                    Component {
-                        id: sampleDelegate
-                        Row {
-                            spacing: 10
-                            Text {
-                                text: app.sampleTime(index)
-                            }
-                            Text {
-                                text: app.sampleTemp(index)
-                            }
-                        }
+                Button {
+                    text: i18n.tr("Start")
+                    onClicked: app.start()
+                }
+                Button {
+                    text: i18n.tr("Stop")
+                    onClicked: app.stop()
+                }
+            }
+
+            Component {
+                id: sampleDelegate
+                Row {
+                    spacing: 10
+                    Text {
+                        text: app.sampleTime(index)
                     }
-
-                    Column {
-                        Button {
-                            text: i18n.tr("Read Log")
-                            onClicked: app.readLog()
-                        }
-
-                        ListView {
-                            width: units.gu(90)
-                            height: units.gu(30)
-                            model: app.samples.len
-                            delegate: sampleDelegate
-                        }
+                    Text {
+                        text: app.sampleTemp(index)
                     }
+                }
+            }
 
+            ListView {
+                width: units.gu(90)
+                height: units.gu(30)
+                model: app.samples.len
+                delegate: sampleDelegate
             }
         }
     }

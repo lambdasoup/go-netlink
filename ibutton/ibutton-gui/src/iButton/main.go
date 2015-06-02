@@ -1,30 +1,30 @@
 package main
 
 import (
+	"fmt"
 	"github.com/lambdasoup/go-netlink/ibutton"
 	"gopkg.in/qml.v1"
-	"fmt"
 )
 
 type App struct {
 	ibutton *ibutton.Button
 	State   string
 	Samples *Samples
-	Status *Status
+	Status  *Status
 }
 
 type Status struct {
-	Time string
-	Count uint32
+	Time            string
+	Count           uint32
 	MissionProgress string
-	Rate string
-	Resolution string
-	StartedTime string
-	Cleared bool
+	Rate            string
+	Resolution      string
+	StartedTime     string
+	Cleared         bool
 }
 
 type Samples struct {
-	Len int
+	Len   int
 	Times []string
 	Temps []string
 }
@@ -62,14 +62,14 @@ func run() error {
 
 // Connect the iButton
 func (app *App) Connect() {
-		app.state("CONNECTING")
-		err := app.ibutton.Open()
-		if err != nil {
-			app.Error()
-			app.Disconnect()
-			return
-		}
-		app.state("CONNECTED")
+	app.state("CONNECTING")
+	err := app.ibutton.Open()
+	if err != nil {
+		app.Error()
+		app.Disconnect()
+		return
+	}
+	app.state("CONNECTED")
 }
 
 // Disconnect the iButton
@@ -80,38 +80,38 @@ func (app *App) Disconnect() {
 
 // Start mission
 func (app *App) Start() {
-		err := app.ibutton.WriteScratchpad()
-		if err != nil {
-			app.Error()
-		}
-		data, err := app.ibutton.ReadScratchpad()
-		if err != nil {
-			app.Error()
-		}
-		// verify transfer status register
-		if data[2] != byte(0x1F) {
-			app.Error()
-		}
-		err = app.ibutton.CopyScratchpad()
-		if err != nil {
-			app.Error()
-		}
-		err = app.ibutton.StartMission()
-		if err != nil {
-			app.Error()
-		}
+	err := app.ibutton.WriteScratchpad()
+	if err != nil {
+		app.Error()
+	}
+	data, err := app.ibutton.ReadScratchpad()
+	if err != nil {
+		app.Error()
+	}
+	// verify transfer status register
+	if data[2] != byte(0x1F) {
+		app.Error()
+	}
+	err = app.ibutton.CopyScratchpad()
+	if err != nil {
+		app.Error()
+	}
+	err = app.ibutton.StartMission()
+	if err != nil {
+		app.Error()
+	}
 }
 
 // Stop mission
 func (app *App) Stop() {
-		app.ibutton.StopMission()
+	app.ibutton.StopMission()
 }
 
 // Clear mission log
 func (app *App) Clear() {
-		app.ibutton.ClearMemory()
-		app.Status.Cleared = true
-		qml.Changed(app.Status, &app.Status.Cleared)
+	app.ibutton.ClearMemory()
+	app.Status.Cleared = true
+	qml.Changed(app.Status, &app.Status.Cleared)
 }
 
 // Error displays an error message
@@ -133,9 +133,9 @@ func (app *App) Update() {
 	qml.Changed(app.Status, &app.Status.Rate)
 
 	if status.HighResolution() {
-			app.Status.Resolution = "0.0625°C"
+		app.Status.Resolution = "0.0625°C"
 	} else {
-			app.Status.Resolution = "0.5°C"
+		app.Status.Resolution = "0.5°C"
 	}
 	qml.Changed(app.Status, &app.Status.Resolution)
 
@@ -173,7 +173,6 @@ func (app *App) SampleTemp(i int) string {
 func (app *App) SampleTime(i int) string {
 	return fmt.Sprintf("%s", app.Samples.Times[i])
 }
-
 
 func (app *App) state(newState string) {
 	app.State = newState
