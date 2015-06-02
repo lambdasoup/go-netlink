@@ -8,7 +8,7 @@ import (
 
 type App struct {
 	ibutton *ibutton.Button
-	State   string
+	Connected bool
 	Samples *Samples
 	Status  *Status
 }
@@ -16,7 +16,7 @@ type App struct {
 type Status struct {
 	Time            string
 	Count           uint32
-	MissionProgress string
+	MissionProgress bool
 	Rate            string
 	Resolution      string
 	StartedTime     string
@@ -42,7 +42,6 @@ func run() error {
 	}, {
 		Init: func(a *App, obj qml.Object) {
 			a.ibutton = new(ibutton.Button)
-			a.State = "DISCONNECTED"
 			a.Samples = new(Samples)
 		},
 	}})
@@ -62,25 +61,30 @@ func run() error {
 
 // Connect the iButton
 func (app *App) Connect() {
-	app.state("CONNECTING")
 	err := app.ibutton.Open()
 	if err != nil {
 		app.Error()
 		app.Disconnect()
 		return
 	}
-	app.state("CONNECTED")
+	app.Connected = true
+	qml.Changed(app, &app.Connected)
 }
 
 // Disconnect the iButton
 func (app *App) Disconnect() {
 	app.ibutton.Close()
-	app.state("DISCONNECTED")
+	app.Connected = false
+	qml.Changed(app, &app.Connected)
 }
 
 // Start mission
 func (app *App) Start() {
-	err := app.ibutton.WriteScratchpad()
+	err := app.ibutton.ClearMemory()
+	if err != nil {
+		app.Error()
+	}
+	err = app.ibutton.WriteScratchpad()
 	if err != nil {
 		app.Error()
 	}
@@ -100,18 +104,13 @@ func (app *App) Start() {
 	if err != nil {
 		app.Error()
 	}
+	app.Update()
 }
 
 // Stop mission
 func (app *App) Stop() {
 	app.ibutton.StopMission()
-}
-
-// Clear mission log
-func (app *App) Clear() {
-	app.ibutton.ClearMemory()
-	app.Status.Cleared = true
-	qml.Changed(app.Status, &app.Status.Cleared)
+	app.Update()
 }
 
 // Error displays an error message
@@ -142,11 +141,7 @@ func (app *App) Update() {
 	app.Status.Count = status.SampleCount()
 	qml.Changed(app.Status, &app.Status.Count)
 
-	if status.MissionInProgress() {
-		app.Status.MissionProgress = "RUNNING"
-	} else {
-		app.Status.MissionProgress = "STOPPED"
-	}
+	app.Status.MissionProgress = status.MissionInProgress()
 	qml.Changed(app.Status, &app.Status.MissionProgress)
 
 	app.Status.StartedTime = status.MissionTimestamp().String()
@@ -172,9 +167,4 @@ func (app *App) SampleTemp(i int) string {
 
 func (app *App) SampleTime(i int) string {
 	return fmt.Sprintf("%s", app.Samples.Times[i])
-}
-
-func (app *App) state(newState string) {
-	app.State = newState
-	qml.Changed(app, &app.State)
 }

@@ -7,7 +7,7 @@ import GoExtensions 1.0
 
 /*!
     \brief MainView with a Label and Button elements.
-                                                */
+                                                            */
 MainView {
     objectName: "main"
     applicationName: "ibutton.mh"
@@ -18,17 +18,14 @@ MainView {
     App {
         id: app
         status: Status {
-            time: "ROFL"
-            onCountChanged: if (count > 0)
+            onCountChanged: if (count > 0) {
                                 app.readLog()
-            onClearedChanged: {
-                app.update()
-                app.start()
-            }
+                            }
         }
 
-        onStateChanged: if (state == "CONNECTED")
-                            app.update()
+        onConnectedChanged: if (connected) {
+                                app.update()
+                            }
     }
 
     // automatic connection handling
@@ -53,7 +50,13 @@ MainView {
                     text: "Status"
                 }
                 Label {
-                    text: app.status.missionProgress
+                    text: {
+                        if (app.status.missionProgress) {
+                            return i18n.tr("Running")
+                        } else {
+                            return i18n.tr("Not running")
+                        }
+                    }
                 }
 
                 Label {
@@ -71,12 +74,21 @@ MainView {
                 }
 
                 Button {
-                    text: i18n.tr("Start")
-                    onClicked: app.start()
-                }
-                Button {
-                    text: i18n.tr("Stop")
-                    onClicked: app.stop()
+                    onClicked: {
+                        if (app.status.missionProgress) {
+                            app.stop()
+                        } else {
+                            app.start()
+                        }
+                    }
+
+                    text: {
+                        if (app.status.missionProgress) {
+                            return i18n.tr("Stop mission")
+                        } else {
+                            return i18n.tr("Start new mission")
+                        }
+                    }
                 }
             }
 
