@@ -17,12 +17,16 @@ MainView {
 
     App {
         id: app
-    }
+        status: Status {
+            time: "ROFL"
+            onCountChanged: if (count > 0) app.readLog()
+            onClearedChanged: {
+                app.update()
+                app.start()
+            }
+        }
 
-    Status {
-        id: status
-        time: "ROFL"
-        app: app
+        onStateChanged: if (state == "CONNECTED") app.update()
     }
 
     // automatic connection handling
@@ -36,7 +40,7 @@ MainView {
         ColumnLayout {
 
             GridLayout {
-                columns: 3
+                columns: 2
 
                 GroupBox {
                     title: "Status"
@@ -53,26 +57,26 @@ MainView {
                             text: "Button time"
                         }
                         Label {
-                            text: status.time
+                            text: app.status.time
                         }
 
                         Label {
                             text: "Sample rate"
                         }
                         Label {
-                            text: status.rate
+                            text: app.status.rate
                         }
 
                         Label {
                             text: "Resolution"
                         }
                         Label {
-                            text: status.resolution
+                            text: app.status.resolution
                         }
 
                         Button {
                             text: i18n.tr("Update Status")
-                            onClicked: status.update()
+                            onClicked: app.update()
                         }
                         Button {
                             text: i18n.tr("Clear Memory")
@@ -96,21 +100,21 @@ MainView {
                             text: "Status"
                         }
                         Label {
-                            text: status.missionProgress
+                            text: app.status.missionProgress
                         }
 
                         Label {
                             text: "Started"
                         }
                         Label {
-                            text: status.startedTime
+                            text: app.status.startedTime
                         }
 
                         Label {
                             text: "Sample count"
                         }
                         Label {
-                            text: status.count
+                            text: app.status.count
                         }
 
                         Button {

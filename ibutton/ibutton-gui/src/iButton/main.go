@@ -10,16 +10,17 @@ type App struct {
 	ibutton *ibutton.Button
 	State   string
 	Samples *Samples
+	Status *Status
 }
 
 type Status struct {
-	App  *App
 	Time string
 	Count uint32
 	MissionProgress string
 	Rate string
 	Resolution string
 	StartedTime string
+	Cleared bool
 }
 
 type Samples struct {
@@ -61,7 +62,6 @@ func run() error {
 
 // Connect the iButton
 func (app *App) Connect() {
-	go func() {
 		app.state("CONNECTING")
 		err := app.ibutton.Open()
 		if err != nil {
@@ -70,7 +70,6 @@ func (app *App) Connect() {
 			return
 		}
 		app.state("CONNECTED")
-	}()
 }
 
 // Disconnect the iButton
@@ -81,7 +80,6 @@ func (app *App) Disconnect() {
 
 // Start mission
 func (app *App) Start() {
-	go func() {
 		err := app.ibutton.WriteScratchpad()
 		if err != nil {
 			app.Error()
@@ -102,21 +100,18 @@ func (app *App) Start() {
 		if err != nil {
 			app.Error()
 		}
-	}()
 }
 
 // Stop mission
 func (app *App) Stop() {
-	go func() {
 		app.ibutton.StopMission()
-	}()
 }
 
 // Clear mission log
 func (app *App) Clear() {
-	go func() {
 		app.ibutton.ClearMemory()
-	}()
+		app.Status.Cleared = true
+		qml.Changed(app.Status, &app.Status.Cleared)
 }
 
 // Error displays an error message
@@ -125,37 +120,37 @@ func (app *App) Error() {
 }
 
 // Update the button status
-func (s *Status) Update() {
-	status, err := s.App.ibutton.Status()
+func (app *App) Update() {
+	status, err := app.ibutton.Status()
 	if err != nil {
-		s.App.Error()
+		app.Error()
 	}
 
-	s.Time = status.Time().String()
-	qml.Changed(s, &s.Time)
+	app.Status.Time = status.Time().String()
+	qml.Changed(app.Status, &app.Status.Time)
 
-	s.Rate = fmt.Sprintf("%v", status.SampleRate())
-	qml.Changed(s, &s.Rate)
+	app.Status.Rate = fmt.Sprintf("%v", status.SampleRate())
+	qml.Changed(app.Status, &app.Status.Rate)
 
 	if status.HighResolution() {
-			s.Resolution = "0.0625°C"
+			app.Status.Resolution = "0.0625°C"
 	} else {
-			s.Resolution = "0.5°C"
+			app.Status.Resolution = "0.5°C"
 	}
-	qml.Changed(s, &s.Resolution)
+	qml.Changed(app.Status, &app.Status.Resolution)
 
-	s.Count = status.SampleCount()
-	qml.Changed(s, &s.Count)
+	app.Status.Count = status.SampleCount()
+	qml.Changed(app.Status, &app.Status.Count)
 
 	if status.MissionInProgress() {
-		s.MissionProgress = "RUNNING"
+		app.Status.MissionProgress = "RUNNING"
 	} else {
-		s.MissionProgress = "STOPPED"
+		app.Status.MissionProgress = "STOPPED"
 	}
-	qml.Changed(s, &s.MissionProgress)
+	qml.Changed(app.Status, &app.Status.MissionProgress)
 
-	s.StartedTime = status.MissionTimestamp().String()
-	qml.Changed(s, &s.StartedTime)
+	app.Status.StartedTime = status.MissionTimestamp().String()
+	qml.Changed(app.Status, &app.Status.StartedTime)
 }
 
 func (app *App) ReadLog() {
